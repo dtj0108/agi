@@ -1,0 +1,46 @@
+name: Soak Nightly
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  soak-nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 420
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit and contract tests
+        run: npm test
+
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Nightly soak run
+        env:
+          ENTITY_ENABLE_NET_TESTS: '1'
+        run: npm run test:soak:nightly
+
+      - name: Upload soak artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-nightly-reports
+          path: |
+            entity-workspace/reports/soak-*.json
+            entity-workspace/reports/soak-*.md
+          if-no-files-found: warn
+

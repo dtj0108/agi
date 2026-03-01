@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+.gitignore
+
+# Mind directory (mounted as volume)
+mind
+
+# Workspace (mounted as volume)
+entity-workspace
+
+# Config (mounted as volume)
+config/local.js
+
+# Logs
+*.log
+
+# Test files
+tests
+*.test.js
+
+# Development files
+.env
+.env.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

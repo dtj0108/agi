@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  entity:
+    build: .
+    container_name: entity
+    volumes:
+      # Persist mind directory
+      - ./mind:/app/mind
+      # Persist workspace
+      - ./entity-workspace:/app/entity-workspace
+      # Mount config (must be created via onboard first)
+      - ./config:/app/config
+    ports:
+      # HTTP API
+      - "3000:3000"
+      # WebSocket
+      - "3001:3001"
+    restart: unless-stopped
+    environment:
+      # LLM API Key (set in .env or pass directly)
+      - LLM_API_KEY=${LLM_API_KEY}
+      # Mark as daemon mode
+      - ENTITY_DAEMON=1
+      # Use Chromium in container
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    # Limit resources
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+# Optional: Add volume for logs
+volumes:
+  entity-logs:

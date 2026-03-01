@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Runtime
+entity.pid
+
+# Environment
+.env
+.env.local
+config/local.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temp
+entity-workspace/temp/*
+!entity-workspace/temp/.gitkeep
+
+# Mind index (regenerated)
+mind/.index.db
+mind/.index.db-journal

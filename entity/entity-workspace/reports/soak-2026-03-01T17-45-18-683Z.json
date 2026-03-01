@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-03-01T17:45:18.690Z",
+  "durationMs": 60000,
+  "thresholds": {
+    "name": "balanced",
+    "maxLlmSchemaFallbackRate": 0.02,
+    "maxCycleFailureRate": 0.01,
+    "maxRequestFailureRate": 0.01
+  },
+  "pass": true,
+  "failures": [],
+  "requests": {
+    "total": 6,
+    "failed": 0,
+    "durationsMs": [
+      12,
+      29,
+      22,
+      25,
+      25,
+      26
+    ],
+    "failureRate": 0,
+    "p95LatencyMs": 29,
+    "maxLatencyMs": 29
+  },
+  "websocket": {
+    "totalMessages": 25,
+    "byType": {
+      "connected": 1,
+      "cycle_start": 6,
+      "thought": 6,
+      "emotion": 6,
+      "cycle_complete": 6
+    },
+    "parseErrors": 0
+  },
+  "health": {
+    "samples": [
+      {
+        "timestamp": "2026-03-01T17:45:19.232Z",
+        "health": {
+          "llmSchemaFallbackRate1h": 0,
+          "cycleFailureRate1h": 0,
+          "errorCount1h": 0,
+          "lastErrorAt": null
+        }
+      },
+      {
+        "timestamp": "2026-03-01T17:45:49.451Z",
+        "health": {
+          "llmSchemaFallbackRate1h": 0,
+          "cycleFailureRate1h": 0,
+          "errorCount1h": 0,
+          "lastErrorAt": null
+        }
+      }
+    ],
+    "maxLlmSchemaFallbackRate": 0,
+    "maxCycleFailureRate": 0,
+    "maxErrorCount1h": 0
+  },
+  "daemon": {
+    "exitedEarly": false,
+    "exitCode": 0,
+    "exitSignal": null,
+    "stdoutTail": [
+      "Entity boot sequence starting...",
+      "",
+      "[1/8] Loading configuration...",
+      "[2/8] Verifying mind directory...",
+      "\u001b[2m2026-03-01T17:45:18.901Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Mind path: /var/folders/nl/ms54zl992qjb63rxrfww12w40000gn/T/entity-soak-8rA6EY/mind",
+      "\u001b[2m2026-03-01T17:45:18.902Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m LLM: openai-completions / mock-model",
+      "[3/8] Starting Mind Server (file watcher + search + git)...",
+      "\u001b[2m2026-03-01T17:45:19.027Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Mind Server started",
+      "[4/8] Initializing Execution Engines...",
+      "\u001b[2m2026-03-01T17:45:19.028Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Execution Engines initialized",
+      "[5/8] Starting Action Gateway...",
+      "\u001b[2m2026-03-01T17:45:19.028Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Action Gateway started",
+      "[6/8] Starting Cognitive Engine...",
+      "\u001b[2m2026-03-01T17:45:19.034Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Cognitive Engine started",
+      "[7/8] Starting Interface Layer (HTTP + WebSocket + CLI + Heartbeat)...",
+      "[Heartbeat] Loaded schedule from mind: */30 * * * *",
+      "[WS] Server listening on ws://127.0.0.1:54362",
+      "[Heartbeat] Scheduled: */30 * * * *",
+      "\u001b[2m2026-03-01T17:45:19.038Z\u001b[0m \u001b[36m[INFO]\u001b[0m \u001b[35m[main]\u001b[0m Interface Layer started",
+      "[8/8] Running initial orientation cycle...",
+      "",
+      "[HTTP] Server listening on http://127.0.0.1:54361",
+      "",
+      "════════════════════════════════════════════════════════════",
+      "Entity is alive. Cycle 0.",
+      "Emotional state: curiosity (47%)",
+      "════════════════════════════════════════════════════════════",
+      "",
+      "[HTTP] GET /health 200 2ms",
+      "[WS] Client connected. Total: 1",
+      "[HTTP] POST /message 200 7ms",
+      "[HTTP] GET /status 200 1ms",
+      "[HTTP] POST /message 200 21ms",
+      "[HTTP] POST /message 200 18ms",
+      "[HTTP] POST /message 200 20ms",
+      "[HTTP] GET /status 200 1ms",
+      "[HTTP] POST /message 200 15ms",
+      "[HTTP] POST /message 200 19ms",
+      "[WS] Client disconnected. Total: 0",
+      "",
+      "[Shutdown] Received interface. Graceful shutdown starting...",
+      "[Shutdown] Saving state...",
+      "[HTTP] POST /kill 200 4ms",
+      "[Shutdown] Writing final thought...",
+      "[Shutdown] Committing pending mind changes...",
+      "[Shutdown] Closing browser...",
+      "[Shutdown] Stopping servers...",
+      "[Shutdown] Complete. Goodbye."
+    ],
+    "stderrTail": [
+      ""
+    ]
+  }
+}
