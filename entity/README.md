@@ -223,11 +223,13 @@ llm: {
 
 ### Autonomy Levels
 
-| Level | Tier 1 | Tier 2 | Tier 3 |
-|-------|--------|--------|--------|
-| `conservative` | Auto | Approval | Approval |
-| `balanced` | Auto | Auto (logged) | Approval |
-| `full_trust` | Auto | Auto | Auto (logged) |
+Autonomy is enforced from `actions.autonomy`.
+
+| Level | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+|-------|--------|--------|--------|--------|
+| `conservative` | Auto | Approval | Approval | Approval |
+| `balanced` | Auto | Auto (logged) | Approval | Approval |
+| `full_trust` | Auto | Auto (logged) | Auto (policy logged) | Auto (policy logged) |
 
 ### Heartbeat
 

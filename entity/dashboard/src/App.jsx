@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Shell } from "@/components/layout/Shell"
 import { Dashboard } from "@/pages/Dashboard"
 import { Config } from "@/pages/Config"
+import { Skills } from "@/pages/Skills"
 import { Mind } from "@/pages/Mind"
 import { Monitor } from "@/pages/Monitor"
 import { Chat } from "@/pages/Chat"
@@ -65,6 +66,8 @@ function App() {
         )
       case "config":
         return <Config />
+      case "skills":
+        return <Skills />
       case "mind":
         return <Mind />
       case "monitor":

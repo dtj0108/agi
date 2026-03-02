@@ -73,8 +73,8 @@ export class PlanPhase {
         params: step.params,
       });
 
-      // If any step is Tier 3, mark plan as needing approval
-      if (step.tier === 3) {
+      // If any step crosses the current approval threshold, mark plan as needing approval
+      if (this.actionGateway.requiresApprovalForTier(step.tier)) {
         normalized.needsApproval = true;
       }
     }

@@ -7,17 +7,22 @@
 
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
+import { SkillAuthor } from '../skills/skill-author.js';
 
 export class UpdatePhase {
-  constructor(mindPath, config, mindServer = null) {
+  constructor(mindPath, config, mindServer = null, approvalHandler = null) {
     this.mindPath = mindPath;
     this.config = config;
     this.mindServer = mindServer;
+    this.approvalHandler = approvalHandler;
     this.decayRate = config.cognitive?.emotionalDecayRate || 0.1;
     this.momentumFactor = config.cognitive?.emotionalMomentum || 0.3;
     this.circuitBreakerThreshold = config.cognitive?.circuitBreakerThreshold || 0.95;
     this.circuitBreakerCycles = config.cognitive?.circuitBreakerCycles || 5;
     this.highIntensityCycles = 0;
+
+    // Initialize skill author for self-authored skills
+    this.skillAuthor = new SkillAuthor(config, mindPath);
   }
 
   /**
@@ -51,7 +56,7 @@ export class UpdatePhase {
       filesUpdated.push('goals/active.md');
     }
 
-    // 4. Save new skill if learned
+    // 4. Save new skill if learned (documentation only)
     if (reflection?.skillLearned) {
       const skillPath = await this.saveSkill(reflection.skillLearned);
       filesUpdated.push(skillPath);
@@ -61,11 +66,19 @@ export class UpdatePhase {
       filesUpdated.push('actions/capabilities.md');
     }
 
-    // 5. Update world context
+    // 5. Handle self-authored executable skills (Tier 4)
+    if (reflection?.skillAuthored) {
+      const authorResult = await this.handleSkillAuthoring(reflection.skillAuthored);
+      if (authorResult.success) {
+        filesUpdated.push(authorResult.path);
+      }
+    }
+
+    // 7. Update world context
     await this.updateWorldContext(observations);
     filesUpdated.push('world/context.md');
 
-    // 6. Update preferences if config action was executed
+    // 8. Update preferences if config action was executed
     if (observations?.some(o => o.tool === 'config' && o.success)) {
       await this.updatePreferences(observations);
       filesUpdated.push('self/preferences.md');
@@ -322,6 +335,98 @@ ${skill.description}`;
     } catch {
       // File doesn't exist
     }
+  }
+
+  /**
+   * Handle self-authored skill creation (Tier 4)
+   * Generates, validates, and requests approval for new skills
+   */
+  async handleSkillAuthoring(skillAuthored) {
+    try {
+      // Step 1: Generate the skill (includes validation)
+      const result = await this.skillAuthor.generateSkill(skillAuthored);
+
+      if (!result.success) {
+        console.log(`[Update] Skill authoring failed: ${result.error}`);
+        return { success: false, error: result.error };
+      }
+
+      // Step 2: Request approval (Tier 4 action)
+      const approvalData = this.skillAuthor.formatForApproval(result);
+
+      if (!this.approvalHandler) {
+        return {
+          success: false,
+          error: `Approval handler is not configured for self-authored skill "${skillAuthored.name}"`,
+        };
+      }
+
+      const approval = await this.requestSkillApproval(approvalData);
+      if (!approval.approved) {
+        console.log(`[Update] Skill "${skillAuthored.name}" was denied by user`);
+        return {
+          success: false,
+          reason: approval.reason || 'User denied skill creation',
+        };
+      }
+
+      // Step 3: Save the approved skill
+      const saveResult = await this.skillAuthor.saveSkill(result);
+
+      if (saveResult.success) {
+        console.log(`[Update] Self-authored skill saved: ${saveResult.name}`);
+
+        // Notify mind server for hot-reload if available
+        if (this.mindServer) {
+          this.mindServer.emit('skill:authored', {
+            name: saveResult.name,
+            path: saveResult.path,
+          });
+        }
+      }
+
+      return saveResult;
+    } catch (err) {
+      console.error(`[Update] Skill authoring error: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Request user approval for a self-authored skill
+   */
+  async requestSkillApproval(skillData) {
+    if (!this.approvalHandler) {
+      return {
+        approved: false,
+        reason: 'Approval handler is not configured',
+      };
+    }
+
+    const decision = await this.approvalHandler({
+      type: 'skill_author',
+      tier: 4,
+      name: skillData.name,
+      description: skillData.description,
+      actions: skillData.actions,
+      reasoning: skillData.reasoning,
+      code: skillData.code,
+      codePreview: skillData.codePreview,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (typeof decision === 'boolean') {
+      return { approved: decision };
+    }
+
+    if (decision && typeof decision === 'object' && typeof decision.approved === 'boolean') {
+      return decision;
+    }
+
+    return {
+      approved: false,
+      reason: 'Approval handler returned an invalid response',
+    };
   }
 
   /**

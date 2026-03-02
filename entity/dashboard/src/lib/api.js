@@ -1,18 +1,41 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000"
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000")
+
+function getApiKey() {
+  if (typeof window === "undefined") return null
+
+  const params = new URLSearchParams(window.location.search)
+  const queryToken = params.get("api_key") || params.get("token")
+  if (queryToken) {
+    localStorage.setItem("entity-api-key", queryToken)
+  }
+
+  return localStorage.getItem("entity-api-key")
+}
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`
+  const apiKey = getApiKey()
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  }
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers,
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Request failed" }))
-    throw new Error(error.error || `HTTP ${response.status}`)
+    const payload = await response.json().catch(() => ({ error: "Request failed" }))
+    const error = new Error(payload.error || `HTTP ${response.status}`)
+    error.status = response.status
+    error.payload = payload
+    throw error
   }
 
   return response.json()
@@ -62,6 +85,15 @@ export const api = {
   pause: () => request("/pause", { method: "POST" }),
   resume: () => request("/resume", { method: "POST" }),
   triggerCycle: () => request("/cycle", { method: "POST" }),
+
+  // Skills
+  getSkills: () => request("/skills"),
+  getSkill: (name) => request(`/skills/${encodeURIComponent(name)}`),
+  testSkill: (name, payload) =>
+    request(`/skills/${encodeURIComponent(name)}/test`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 }
 
 export default api

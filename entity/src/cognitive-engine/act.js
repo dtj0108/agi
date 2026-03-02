@@ -171,7 +171,7 @@ export class ActPhase extends EventEmitter {
       this.emit('approval_needed', {
         planId: plan.planId,
         plan,
-        message: `Tier 3 action requires approval`,
+        message: `Plan requires approval under current autonomy policy`,
       });
 
       // Set timeout

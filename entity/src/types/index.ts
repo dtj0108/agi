@@ -86,8 +86,10 @@ export interface CognitiveConfig {
   circuitBreakerCycles: number;
 }
 
+export type AutonomyLevel = 'conservative' | 'balanced' | 'full_trust';
+
 export interface ActionConfig {
-  autonomy: 'conservative' | 'balanced' | 'full_trust';
+  autonomy: AutonomyLevel;
   shell: ShellConfig;
   browser: BrowserConfig;
   files: FilesConfig;

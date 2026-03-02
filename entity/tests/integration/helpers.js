@@ -133,7 +133,7 @@ function createTestMindServer(mindPath) {
   };
 }
 
-function createConfig({ tempRoot, mindPath, httpPort, wsPort, apiKey = null }) {
+function createConfig({ tempRoot, mindPath, httpPort, wsPort, apiKey = null, autonomy = 'balanced' }) {
   const workspacePath = join(tempRoot, 'entity-workspace');
   const securityPath = join(mindPath, 'security');
 
@@ -171,6 +171,7 @@ function createConfig({ tempRoot, mindPath, httpPort, wsPort, apiKey = null }) {
       circuitBreakerCycles: 5,
     },
     actions: {
+      autonomy,
       approvalTimeout: 5000,
       blockedPatterns: [],
       shell: {
@@ -225,6 +226,7 @@ function createConfig({ tempRoot, mindPath, httpPort, wsPort, apiKey = null }) {
 function createDeterministicLlmResponder(behavior = {}) {
   const needsAction = behavior.needsAction === true;
   const approvalPlan = behavior.approvalPlan === true;
+  const tier2Plan = behavior.tier2Plan === true;
 
   const payloadForPhase = (phase) => {
     if (phase === 'think') {
@@ -267,6 +269,22 @@ function createDeterministicLlmResponder(behavior = {}) {
           ],
           rollback: null,
           emotionalContext: 'cautious',
+        };
+      }
+
+      if (tier2Plan) {
+        return {
+          goal: 'Run a tier-2 step for policy testing',
+          steps: [
+            {
+              tool: 'shell',
+              action: 'mkdir test-dir',
+              params: { command: 'mkdir test-dir' },
+              intent: 'Exercise conservative approval policy',
+            },
+          ],
+          rollback: null,
+          emotionalContext: 'focused',
         };
       }
 
@@ -328,6 +346,7 @@ export async function startInProcessEntity(options = {}) {
     httpPort,
     wsPort,
     apiKey: options.apiKey || null,
+    autonomy: options.autonomy || 'balanced',
   });
 
   configureTelemetry(config.observability);

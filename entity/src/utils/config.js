@@ -85,6 +85,12 @@ export async function loadConfig() {
   if (process.env.ENTITY_ENABLE_CLI) {
     config.interface.enableCli = process.env.ENTITY_ENABLE_CLI === 'true';
   }
+  if (process.env.ENTITY_ACTIONS_AUTONOMY) {
+    const autonomy = process.env.ENTITY_ACTIONS_AUTONOMY;
+    if (autonomy === 'conservative' || autonomy === 'balanced' || autonomy === 'full_trust') {
+      config.actions.autonomy = autonomy;
+    }
+  }
   if (process.env.ENTITY_LOG_LEVEL) {
     config.logging.level = process.env.ENTITY_LOG_LEVEL;
   }

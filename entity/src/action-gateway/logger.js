@@ -37,6 +37,7 @@ export class SecurityLogger {
       url: action.params?.url || null,
       path: action.params?.path || null,
       intent: action.intent,
+      source: action.source || null,
       tier: action.tier,
       approved_by: result.approved_by || 'auto',
       exit_code: result.exitCode ?? null,
@@ -61,6 +62,7 @@ export class SecurityLogger {
       url: action.params?.url || null,
       path: action.params?.path || null,
       intent: action.intent,
+      source: action.source || null,
       reason,
     };
 

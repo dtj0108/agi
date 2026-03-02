@@ -1,4 +1,23 @@
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001"
+const DEFAULT_WS_URL = (() => {
+  if (typeof window === "undefined") return "ws://localhost:3001"
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws"
+  const host = window.location.hostname
+  const envPort = import.meta.env.VITE_WS_PORT
+  const port = envPort || "3001"
+  return `${protocol}://${host}:${port}`
+})()
+
+const WS_URL = import.meta.env.VITE_WS_URL || DEFAULT_WS_URL
+
+function getApiKey() {
+  if (typeof window === "undefined") return null
+  const params = new URLSearchParams(window.location.search)
+  const queryToken = params.get("api_key") || params.get("token")
+  if (queryToken) {
+    localStorage.setItem("entity-api-key", queryToken)
+  }
+  return localStorage.getItem("entity-api-key")
+}
 
 export function createEntitySocket(handlers = {}) {
   let ws = null
@@ -10,7 +29,9 @@ export function createEntitySocket(handlers = {}) {
   function connect() {
     if (ws?.readyState === WebSocket.OPEN) return
 
-    ws = new WebSocket(WS_URL)
+    const apiKey = getApiKey()
+    const url = apiKey ? `${WS_URL}${WS_URL.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(apiKey)}` : WS_URL
+    ws = new WebSocket(url)
 
     ws.onopen = () => {
       console.log("[WS] Connected to Entity")

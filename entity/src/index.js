@@ -17,6 +17,7 @@ import { ShellExecutor } from './execution-engines/shell.js';
 import { BrowserController } from './execution-engines/browser.js';
 import { FileOperations } from './execution-engines/files.js';
 import { InterfaceLayer } from './interface/index.js';
+import { SkillsRegistry, SkillsExecutor } from './skills/index.js';
 
 // Global state for shutdown handling
 let mindServer = null;
@@ -65,10 +66,47 @@ async function main() {
 
   // Step 4: Initialize Execution Engines
   console.log('[4/8] Initializing Execution Engines...');
+
+  // Load skills
+  let skillsExecutor = null;
+  try {
+    const skillsConfigPath = resolve(process.cwd(), 'config/skills.json');
+    let skillsConfig = {};
+    if (existsSync(skillsConfigPath)) {
+      const { readFileSync } = await import('fs');
+      skillsConfig = JSON.parse(readFileSync(skillsConfigPath, 'utf-8'));
+    }
+
+    // Pass mindServer for hot-reload support
+    const skillsRegistry = new SkillsRegistry(skillsConfig, mindServer);
+    const builtInPath = resolve(process.cwd(), 'src/skills/built-in');
+    const userSkillsPath = resolve(process.cwd(), 'skills');
+
+    // Load built-in and user-installed skills
+    await skillsRegistry.loadBuiltIn(builtInPath);
+    await skillsRegistry.loadUserSkills(userSkillsPath);
+
+    // Load self-authored skills from mind directory
+    await skillsRegistry.loadAuthoredSkills(mindPath);
+
+    skillsExecutor = new SkillsExecutor(skillsRegistry);
+
+    const builtInCount = skillsRegistry.listBuiltIn().length;
+    const authoredCount = skillsRegistry.listAuthored().length;
+    log.info(`Skills loaded: ${builtInCount} built-in, ${authoredCount} self-authored`);
+
+    if (skillsRegistry.names().length > 0) {
+      log.info(`Available skills: ${skillsRegistry.names().join(', ')}`);
+    }
+  } catch (err) {
+    log.warn(`Failed to load skills: ${err.message}`);
+  }
+
   executionEngines = {
     shell: new ShellExecutor(config),
     browser: new BrowserController(config),
     files: new FileOperations(config),
+    skills: skillsExecutor,
   };
   log.info('Execution Engines initialized');
 
@@ -79,7 +117,7 @@ async function main() {
 
   // Step 6: Start Cognitive Engine
   console.log('[6/8] Starting Cognitive Engine...');
-  cognitiveEngine = new CognitiveEngine(config, actionGateway, mindServer);
+  cognitiveEngine = new CognitiveEngine(config, actionGateway, mindServer, skillsExecutor);
   await cognitiveEngine.initialize();
   log.info('Cognitive Engine started');
 

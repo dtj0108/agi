@@ -1,0 +1,91 @@
+{
+  "name": "http-request",
+  "version": "1.0.0",
+  "description": "Make HTTP requests to external APIs and websites",
+  "author": "entity-team",
+  "actions": [
+    {
+      "name": "get",
+      "description": "Make an HTTP GET request",
+      "tier": 2,
+      "params": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "URL to fetch"
+        },
+        "headers": {
+          "type": "object",
+          "required": false,
+          "description": "Custom headers to include"
+        }
+      }
+    },
+    {
+      "name": "post",
+      "description": "Make an HTTP POST request",
+      "tier": 2,
+      "params": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "URL to post to"
+        },
+        "body": {
+          "type": "object",
+          "required": false,
+          "description": "JSON body to send"
+        },
+        "headers": {
+          "type": "object",
+          "required": false,
+          "description": "Custom headers to include"
+        }
+      }
+    },
+    {
+      "name": "request",
+      "description": "Make a custom HTTP request with any method",
+      "tier": 2,
+      "params": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "URL for the request"
+        },
+        "method": {
+          "type": "string",
+          "required": true,
+          "description": "HTTP method (GET, POST, PUT, DELETE, etc.)"
+        },
+        "body": {
+          "type": "object",
+          "required": false,
+          "description": "Request body (for POST, PUT, etc.)"
+        },
+        "headers": {
+          "type": "object",
+          "required": false,
+          "description": "Custom headers to include"
+        }
+      }
+    }
+  ],
+  "config": {
+    "allowedDomains": {
+      "type": "array",
+      "default": ["*"],
+      "description": "List of allowed domains (* for all)"
+    },
+    "blockedDomains": {
+      "type": "array",
+      "default": [],
+      "description": "List of blocked domains"
+    },
+    "timeout": {
+      "type": "number",
+      "default": 30000,
+      "description": "Request timeout in milliseconds"
+    }
+  }
+}

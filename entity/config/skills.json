@@ -1,0 +1,19 @@
+{
+  "skills": {
+    "web-search": {
+      "enabled": true,
+      "googleApiKey": "",
+      "googleCseId": ""
+    },
+    "http-request": {
+      "enabled": true,
+      "allowedDomains": [],
+      "blockedDomains": [],
+      "timeout": 30000
+    },
+    "json-store": {
+      "enabled": true,
+      "storagePath": "entity-workspace/store.json"
+    }
+  }
+}

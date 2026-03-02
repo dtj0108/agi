@@ -27,7 +27,22 @@ export function Config() {
     try {
       setLoading(true)
       const data = await api.getConfig()
-      setConfig(data)
+      const autonomyLevel = data.actions?.autonomy || data.autonomy?.level || "balanced"
+      const blockedPatterns = data.actions?.blockedPatterns || data.autonomy?.blockedPatterns || []
+
+      setConfig({
+        ...data,
+        actions: {
+          ...(data.actions || {}),
+          autonomy: autonomyLevel,
+          blockedPatterns,
+        },
+        autonomy: {
+          ...(data.autonomy || {}),
+          level: autonomyLevel,
+          blockedPatterns,
+        },
+      })
       setError(null)
     } catch (err) {
       setError(err.message)
@@ -39,7 +54,7 @@ export function Config() {
   async function saveConfig() {
     try {
       setSaving(true)
-      await api.updateConfig(config)
+      await api.updateConfig(buildSavePayload(config))
       setDirty(false)
       setError(null)
     } catch (err) {
@@ -58,6 +73,21 @@ export function Config() {
       },
     }))
     setDirty(true)
+  }
+
+  function buildSavePayload(currentConfig) {
+    return {
+      llm: currentConfig.llm,
+      heartbeat: currentConfig.heartbeat,
+      actions: {
+        autonomy:
+          currentConfig.actions?.autonomy || currentConfig.autonomy?.level || "balanced",
+        blockedPatterns:
+          currentConfig.actions?.blockedPatterns ||
+          currentConfig.autonomy?.blockedPatterns ||
+          [],
+      },
+    }
   }
 
   if (loading) {
@@ -194,8 +224,8 @@ export function Config() {
               <div className="space-y-2">
                 <Label>Autonomy Level</Label>
                 <Select
-                  value={config.autonomy?.level || "balanced"}
-                  onValueChange={(v) => updateField("autonomy", "level", v)}
+                  value={config.actions?.autonomy || config.autonomy?.level || "balanced"}
+                  onValueChange={(v) => updateField("actions", "autonomy", v)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -218,10 +248,14 @@ export function Config() {
                 <Label>Blocked Patterns</Label>
                 <Textarea
                   placeholder="Enter blocked command patterns (one per line)"
-                  value={config.autonomy?.blockedPatterns?.join("\n") || ""}
+                  value={
+                    config.actions?.blockedPatterns?.join("\n") ||
+                    config.autonomy?.blockedPatterns?.join("\n") ||
+                    ""
+                  }
                   onChange={(e) =>
                     updateField(
-                      "autonomy",
+                      "actions",
                       "blockedPatterns",
                       e.target.value.split("\n").filter(Boolean)
                     )

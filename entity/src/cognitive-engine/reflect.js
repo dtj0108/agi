@@ -58,6 +58,7 @@ export class ReflectPhase {
       emotionalUpdate: this.normalizeEmotionalUpdate(reflection.emotionalUpdate),
       goalUpdate: reflection.goalUpdate || null,
       skillLearned: reflection.skillLearned || null,
+      skillAuthored: reflection.skillAuthored || null,
       valueAlignment: this.clampValue(reflection.valueAlignment, -1, 1),
       lessonsLearned: Array.isArray(reflection.lessonsLearned)
         ? reflection.lessonsLearned

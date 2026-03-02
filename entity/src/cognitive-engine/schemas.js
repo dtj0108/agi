@@ -48,7 +48,7 @@ export const PLAN_SCHEMA = {
         additionalProperties: false,
         required: ['tool', 'action', 'params', 'intent'],
         properties: {
-          tool: { enum: ['shell', 'browser', 'file', 'config'] },
+          tool: { enum: ['shell', 'browser', 'file', 'config', 'skill'] },
           action: { type: 'string' },
           params: { type: 'object' },
           intent: { type: 'string' },
@@ -111,6 +111,60 @@ export const REFLECT_SCHEMA = {
             examples: {
               type: 'array',
               items: { type: 'string' },
+            },
+          },
+        },
+        { type: 'null' },
+      ],
+    },
+    skillAuthored: {
+      anyOf: [
+        {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name', 'description', 'actions', 'reasoning'],
+          properties: {
+            name: {
+              type: 'string',
+              pattern: '^[a-z][a-z0-9-]*$',
+              description: 'Lowercase alphanumeric skill name with hyphens',
+            },
+            description: {
+              type: 'string',
+              description: 'What this skill does',
+            },
+            actions: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['name', 'description', 'params', 'implementation'],
+                properties: {
+                  name: { type: 'string' },
+                  description: { type: 'string' },
+                  params: {
+                    type: 'object',
+                    additionalProperties: {
+                      type: 'object',
+                      properties: {
+                        type: { type: 'string' },
+                        required: { type: 'boolean' },
+                        default: {},
+                        description: { type: 'string' },
+                      },
+                    },
+                  },
+                  implementation: {
+                    type: 'string',
+                    description: 'JavaScript code for this action method body',
+                  },
+                },
+              },
+            },
+            reasoning: {
+              type: 'string',
+              description: 'Why this skill is being created',
             },
           },
         },

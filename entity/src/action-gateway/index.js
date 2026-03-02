@@ -71,22 +71,29 @@ export class ActionGateway extends EventEmitter {
       };
     }
 
-    // Step 3: Classify tier
-    const tier = action.tier || classifyTier(action);
+    // Step 3: Classify tier (special handling for skills)
+    let tier;
+    if (action.tool === 'skill' && this.engines.skills) {
+      tier = action.tier || this.engines.skills.getTier(action.params?.skill, action.params?.action);
+    } else {
+      tier = action.tier || classifyTier(action);
+    }
     action.tier = tier;
 
-    // Step 4: Handle based on tier
+    // Step 4: Handle based on tier + autonomy policy
     let approved_by = 'auto';
+    const requiresApproval = this.requiresApprovalForTier(tier);
 
     if (tier === 2) {
-      // Emit notification but proceed
+      // Emit notification for write-class actions.
       this.emit('notification', {
         type: 'tier2_action',
         action,
         message: `Executing Tier 2 action: ${action.tool}`,
       });
-    } else if (tier === 3) {
-      // Require approval
+    }
+
+    if (requiresApproval) {
       const actionId = `action-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       telemetry.incrementCounter('action.approval_required', 1, { tool: action.tool });
       this.logger.logApprovalRequest(actionId, action);
@@ -109,6 +116,13 @@ export class ActionGateway extends EventEmitter {
           approved_by: 'blocked',
         };
       }
+    } else if (tier >= 3) {
+      approved_by = 'policy';
+      telemetry.recordEvent('action_auto_approved_by_policy', {
+        tool: action.tool,
+        tier,
+        autonomy: this.getAutonomyLevel(),
+      });
     }
 
     // Step 5: Execute via appropriate engine
@@ -129,6 +143,12 @@ export class ActionGateway extends EventEmitter {
           break;
         case 'config':
           result = await this.executeConfig(action.params);
+          break;
+        case 'skill':
+          if (!this.engines.skills) {
+            throw new Error('Skills engine not initialized');
+          }
+          result = await this.engines.skills.execute(action.params);
           break;
         default:
           throw new Error(`Unknown tool: ${action.tool}`);
@@ -163,7 +183,7 @@ export class ActionGateway extends EventEmitter {
   }
 
   /**
-   * Request approval for a Tier 3 action
+   * Request approval for a tiered action
    */
   async requestApproval(actionId, action) {
     return new Promise((resolve, reject) => {
@@ -172,7 +192,7 @@ export class ActionGateway extends EventEmitter {
       this.emit('approval_required', {
         actionId,
         action,
-        message: `Tier 3 action requires approval: ${action.tool}`,
+        message: `Tier ${action.tier} action requires approval: ${action.tool}`,
         details: action.params,
       });
 
@@ -220,10 +240,69 @@ export class ActionGateway extends EventEmitter {
   }
 
   /**
+   * Get the active autonomy level with safe fallback.
+   */
+  getAutonomyLevel() {
+    const level = this.config?.actions?.autonomy;
+    if (level === 'conservative' || level === 'balanced' || level === 'full_trust') {
+      return level;
+    }
+    return 'balanced';
+  }
+
+  /**
+   * Get tier threshold at or above which approval is required.
+   * Returns null when approvals are disabled by policy.
+   */
+  getApprovalThreshold(level = this.getAutonomyLevel()) {
+    switch (level) {
+      case 'conservative':
+        return 2;
+      case 'balanced':
+        return 3;
+      case 'full_trust':
+        return null;
+      default:
+        return 3;
+    }
+  }
+
+  /**
+   * Determine if a tier requires explicit approval under current policy.
+   */
+  requiresApprovalForTier(tier) {
+    const threshold = this.getApprovalThreshold();
+    if (threshold === null) {
+      return false;
+    }
+
+    const normalizedTier = Number(tier);
+    if (!Number.isFinite(normalizedTier)) {
+      return true;
+    }
+
+    return normalizedTier >= threshold;
+  }
+
+  /**
    * Get action history
    */
   async getHistory(limit = 50) {
     return this.logger.getHistory(limit);
+  }
+
+  /**
+   * Get pending approvals
+   */
+  getPendingApprovals() {
+    return Array.from(this.pendingApprovals.entries()).map(([id, pending]) => ({
+      id,
+      tool: pending.action.tool,
+      command: pending.action.params?.command || JSON.stringify(pending.action.params),
+      reason: pending.action.intent || 'No reason provided',
+      tier: pending.action.tier,
+      timestamp: Date.now(),
+    }));
   }
 
   /**

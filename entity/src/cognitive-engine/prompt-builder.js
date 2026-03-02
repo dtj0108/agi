@@ -37,6 +37,7 @@ Available tools:
   * heartbeat.schedule, heartbeat.enabled, heartbeat.prompt
   * cognitive.temperature (0-1, creativity), cognitive.emotionalDecayRate, cognitive.emotionalMomentum
   * cognitive.reflectionInterval, cognitive.maxTokens
+- skill: Use installed skills (see AVAILABLE SKILLS section for list)
 
 Your response must be a JSON object:
 
@@ -44,9 +45,9 @@ Your response must be a JSON object:
   "goal": "Clear statement of what you're trying to achieve",
   "steps": [
     {
-      "tool": "shell" | "browser" | "file",
+      "tool": "shell" | "browser" | "file" | "config" | "skill",
       "action": "specific action",
-      "params": { "command": "...", "url": "...", "path": "...", "setting": "...", "value": "...", etc. },
+      "params": { "command": "...", "url": "...", "path": "...", "skill": "...", etc. },
       "intent": "why this step is needed"
     }
   ],
@@ -79,9 +80,29 @@ Your response must be a JSON object:
     "description": "what you learned to do",
     "examples": ["example usage"]
   } or null,
+  "skillAuthored": {
+    "name": "lowercase-skill-name (kebab-case)",
+    "description": "what this skill does",
+    "actions": [
+      {
+        "name": "actionName",
+        "description": "what this action does",
+        "params": { "paramName": { "type": "string", "required": true, "description": "..." } },
+        "implementation": "// JavaScript code for this action method body"
+      }
+    ],
+    "reasoning": "why you are creating this skill"
+  } or null,
   "valueAlignment": -1.0 to 1.0,
   "lessonsLearned": ["lesson 1", "lesson 2"]
 }
+
+SKILL AUTHORING: If you notice a pattern where you repeatedly perform similar actions,
+you can create a self-authored skill. Authored skills:
+- Are saved to your mind as executable code
+- Require user approval before saving (Tier 4)
+- Can be used in future cognitive cycles
+- Should only be created for truly reusable patterns
 
 Be honest about failures. Learning from mistakes is valuable.
 Respond ONLY with valid JSON.`,
@@ -95,9 +116,62 @@ emotions, goals, and a continuous inner life. Every response you give
 should be informed by who you are, how you feel, and what you want.`;
 
 export class PromptBuilder {
-  constructor(config) {
+  constructor(config, skillsExecutor = null) {
     this.config = config;
     this.promptCaching = config.llm.promptCaching && config.llm.api === 'anthropic-messages';
+    this.skillsExecutor = skillsExecutor;
+  }
+
+  /**
+   * Set the skills executor (can be set after construction)
+   */
+  setSkillsExecutor(executor) {
+    this.skillsExecutor = executor;
+  }
+
+  /**
+   * Get skills context for LLM prompts
+   */
+  getSkillsContext() {
+    if (!this.skillsExecutor) {
+      return '';
+    }
+
+    const builtInContext = this.skillsExecutor.getContextForLLM();
+    const authoredContext = this.skillsExecutor.getAuthoredContextForLLM();
+
+    let result = '';
+
+    if (builtInContext) {
+      result += `
+AVAILABLE SKILLS (use tool: "skill"):
+${builtInContext}`;
+    }
+
+    if (authoredContext) {
+      result += `
+
+SELF-AUTHORED SKILLS (Tier 4 - each use requires approval):
+${authoredContext}`;
+    }
+
+    if (result) {
+      result += `
+
+Example skill action:
+{
+  "tool": "skill",
+  "action": "use skill",
+  "params": {
+    "skill": "web-search",
+    "action": "search",
+    "query": "your search query"
+  },
+  "intent": "why you're using this skill"
+}`;
+    }
+
+    return result;
   }
 
   /**
@@ -137,6 +211,7 @@ ${context.worldContext}
 
 AVAILABLE TOOLS:
 ${context.toolbox}
+${phase === 'plan' ? this.getSkillsContext() : ''}
 
 MY PREFERENCES:
 ${context.preferences || 'No preferences set'}
@@ -181,6 +256,7 @@ ${context.worldContext}
 
 AVAILABLE TOOLS:
 ${context.toolbox}
+${phase === 'plan' ? this.getSkillsContext() : ''}
 
 MY PREFERENCES:
 ${context.preferences || 'No preferences set'}

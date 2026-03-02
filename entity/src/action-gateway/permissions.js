@@ -5,6 +5,7 @@
  * Tier 1: Read-only, auto-approved
  * Tier 2: Write operations, notify user
  * Tier 3: Destructive/sensitive, require approval
+ * Tier 4: Self-authored code execution, require code review + approval
  */
 
 // Shell commands by tier
@@ -70,9 +71,34 @@ export function classifyTier(action) {
       return classifyFileTier(action.params);
     case 'config':
       return classifyConfigTier(action.params);
+    case 'skill':
+      return classifySkillTier(action.params);
     default:
       return 3; // Unknown tools default to highest tier
   }
+}
+
+/**
+ * Classify skill action tier
+ * Built-in skills use their declared tier (1-3)
+ * Authored skills are always Tier 4
+ */
+function classifySkillTier(params) {
+  // If no params or skill name, default to Tier 3
+  if (!params?.skill) {
+    return 3;
+  }
+
+  // Check if this is an authored skill (metadata indicates it)
+  // The SkillsExecutor will provide this info
+  if (params._authored === true) {
+    return 4;
+  }
+
+  // For built-in skills, use the tier from the skill manifest
+  // This will be resolved by the SkillsExecutor.getTier() method
+  // Default to Tier 2 for skills without explicit tier
+  return params._tier || 2;
 }
 
 /**

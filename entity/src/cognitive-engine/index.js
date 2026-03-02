@@ -21,12 +21,13 @@ import { UpdatePhase } from './update.js';
 import { getTelemetry } from '../observability/telemetry.js';
 
 export class CognitiveEngine extends EventEmitter {
-  constructor(config, actionGateway, mindServer) {
+  constructor(config, actionGateway, mindServer, skillsExecutor = null) {
     super();
     this.config = config;
     this.actionGateway = actionGateway;
     this.mindServer = mindServer;
     this.mindPath = config.mind.path;
+    this.skillsExecutor = skillsExecutor;
 
     // State
     this.cycleCount = 0;
@@ -40,7 +41,7 @@ export class CognitiveEngine extends EventEmitter {
 
     // Initialize components
     this.llm = new LLM(config);
-    this.promptBuilder = new PromptBuilder(config);
+    this.promptBuilder = new PromptBuilder(config, skillsExecutor);
 
     // Initialize phases
     this.orient = new OrientPhase(this.mindPath, config, mindServer);
@@ -56,10 +57,50 @@ export class CognitiveEngine extends EventEmitter {
       fallbackFactory: (context, thought, plan, observations) =>
         this.createReflectFallback(context, thought, plan, observations),
     });
-    this.update = new UpdatePhase(this.mindPath, config, mindServer);
+    this.update = new UpdatePhase(
+      this.mindPath,
+      config,
+      mindServer,
+      (skillApprovalPayload) => this.requestSkillAuthorApproval(skillApprovalPayload)
+    );
 
     // Forward act phase events
     this.act.on('approval_needed', (data) => this.emit('approval_needed', data));
+  }
+
+  /**
+   * Route self-authored skill approval through ActionGateway pending approvals.
+   */
+  async requestSkillAuthorApproval(skillApprovalPayload) {
+    if (!this.actionGateway.requiresApprovalForTier(4)) {
+      return {
+        approved: true,
+        approvalId: null,
+        approved_by: 'policy',
+      };
+    }
+
+    const approvalId = `skill-author-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const action = {
+      tool: 'skill_author',
+      tier: 4,
+      intent: `Approve self-authored skill: ${skillApprovalPayload?.name || 'unknown'}`,
+      params: {
+        ...skillApprovalPayload,
+        type: 'skill_author',
+      },
+    };
+
+    try {
+      await this.actionGateway.requestApproval(approvalId, action);
+      return { approved: true, approvalId };
+    } catch (error) {
+      return {
+        approved: false,
+        approvalId,
+        reason: error?.message || 'Approval denied',
+      };
+    }
   }
 
   /**

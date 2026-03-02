@@ -1,0 +1,73 @@
+{
+  "name": "json-store",
+  "version": "1.0.0",
+  "description": "Persistent key-value storage for Entity data",
+  "author": "entity-team",
+  "actions": [
+    {
+      "name": "get",
+      "description": "Get a value by key",
+      "tier": 1,
+      "params": {
+        "key": {
+          "type": "string",
+          "required": true,
+          "description": "Key to retrieve"
+        }
+      }
+    },
+    {
+      "name": "set",
+      "description": "Set a value for a key",
+      "tier": 2,
+      "params": {
+        "key": {
+          "type": "string",
+          "required": true,
+          "description": "Key to set"
+        },
+        "value": {
+          "required": true,
+          "description": "Value to store (any JSON-serializable type)"
+        }
+      }
+    },
+    {
+      "name": "delete",
+      "description": "Delete a key",
+      "tier": 2,
+      "params": {
+        "key": {
+          "type": "string",
+          "required": true,
+          "description": "Key to delete"
+        }
+      }
+    },
+    {
+      "name": "list",
+      "description": "List all keys",
+      "tier": 1,
+      "params": {
+        "prefix": {
+          "type": "string",
+          "required": false,
+          "description": "Optional prefix to filter keys"
+        }
+      }
+    },
+    {
+      "name": "clear",
+      "description": "Delete all keys (dangerous)",
+      "tier": 3,
+      "params": {}
+    }
+  ],
+  "config": {
+    "storagePath": {
+      "type": "string",
+      "default": "entity-workspace/store.json",
+      "description": "Path to the JSON storage file"
+    }
+  }
+}

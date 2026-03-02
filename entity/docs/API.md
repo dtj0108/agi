@@ -742,7 +742,7 @@ cognitive: {
 
 ```javascript
 actions: {
-  autonomy: 'balanced',        // 'conservative', 'balanced', 'full_trust'
+  autonomy: 'balanced',        // conservative: tier>=2 approval, balanced: tier>=3, full_trust: no approval prompts
   shell: {
     workingDir: './entity-workspace',
     timeout: 30000,
@@ -760,6 +760,8 @@ actions: {
   approvalTimeout: 300000,     // 5 minutes
 }
 ```
+
+Runtime override: set `ENTITY_ACTIONS_AUTONOMY` to `conservative`, `balanced`, or `full_trust`.
 
 ### Interface Settings
 

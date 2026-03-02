@@ -1,0 +1,44 @@
+{
+  "name": "web-search",
+  "version": "1.0.0",
+  "description": "Search the web for information using DuckDuckGo or Google",
+  "author": "entity-team",
+  "actions": [
+    {
+      "name": "search",
+      "description": "Search the web and return relevant results",
+      "tier": 2,
+      "params": {
+        "query": {
+          "type": "string",
+          "required": true,
+          "description": "The search query"
+        },
+        "engine": {
+          "type": "string",
+          "enum": ["duckduckgo", "google"],
+          "default": "duckduckgo",
+          "description": "Search engine to use"
+        },
+        "limit": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum number of results to return"
+        }
+      }
+    }
+  ],
+  "config": {
+    "googleApiKey": {
+      "type": "string",
+      "secret": true,
+      "required": false,
+      "description": "Google Custom Search API key (optional)"
+    },
+    "googleCseId": {
+      "type": "string",
+      "required": false,
+      "description": "Google Custom Search Engine ID (optional)"
+    }
+  }
+}

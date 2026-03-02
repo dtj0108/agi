@@ -8,6 +8,7 @@ import {
   Brain,
   Activity,
   MessageSquare,
+  Puzzle,
   Moon,
   Sun,
 } from "lucide-react"
@@ -15,6 +16,7 @@ import {
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "config", label: "Configuration", icon: Settings },
+  { id: "skills", label: "Skills", icon: Puzzle },
   { id: "mind", label: "Mind", icon: Brain },
   { id: "monitor", label: "Monitor", icon: Activity },
   { id: "chat", label: "Chat", icon: MessageSquare },

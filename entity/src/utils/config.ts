@@ -144,6 +144,12 @@ function applyEnvironmentOverrides(config: EntityConfig): void {
   if (env.ENTITY_ENABLE_CLI) {
     config.interface.enableCli = env.ENTITY_ENABLE_CLI === 'true';
   }
+  if (env.ENTITY_ACTIONS_AUTONOMY) {
+    const autonomy = env.ENTITY_ACTIONS_AUTONOMY;
+    if (autonomy === 'conservative' || autonomy === 'balanced' || autonomy === 'full_trust') {
+      config.actions.autonomy = autonomy;
+    }
+  }
 
   // Logging configuration
   if (env.ENTITY_LOG_LEVEL) {

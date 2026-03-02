@@ -268,6 +268,11 @@ export class HttpServer extends EventEmitter {
 
     // Get configuration
     this.app.get('/config', (req, res) => {
+      const autonomyLevel = this.actionGateway.getAutonomyLevel?.() || this.getAutonomyLevelFallback();
+      const blockedPatterns = Array.isArray(this.config.actions?.blockedPatterns)
+        ? [...this.config.actions.blockedPatterns]
+        : [];
+
       // Return a sanitized version of config (without API keys)
       const safeConfig = {
         llm: {
@@ -276,7 +281,15 @@ export class HttpServer extends EventEmitter {
           temperature: this.config.llm?.temperature,
           promptCaching: this.config.llm?.promptCaching,
         },
-        autonomy: this.config.autonomy,
+        actions: {
+          autonomy: autonomyLevel,
+          blockedPatterns,
+        },
+        // Compatibility alias for older clients.
+        autonomy: {
+          level: autonomyLevel,
+          blockedPatterns,
+        },
         heartbeat: this.config.heartbeat,
         interface: {
           httpPort: this.config.interface?.httpPort,
@@ -289,17 +302,47 @@ export class HttpServer extends EventEmitter {
     // Update configuration
     this.app.put('/config', (req, res) => {
       try {
-        const updates = req.body;
+        const updates = req.body || {};
+
         // Only allow updating safe config options
         if (updates.llm) {
           this.config.llm = { ...this.config.llm, ...updates.llm };
         }
-        if (updates.autonomy) {
-          this.config.autonomy = { ...this.config.autonomy, ...updates.autonomy };
-        }
+
         if (updates.heartbeat) {
           this.config.heartbeat = { ...this.config.heartbeat, ...updates.heartbeat };
         }
+
+        const autonomyCandidate = updates.actions?.autonomy ?? updates.autonomy?.level;
+        if (autonomyCandidate !== undefined) {
+          const autonomy = this.validateAutonomyLevel(autonomyCandidate);
+          if (!autonomy) {
+            return res.status(400).json({
+              success: false,
+              error: 'Invalid autonomy level',
+              allowed: ['conservative', 'balanced', 'full_trust'],
+            });
+          }
+
+          this.config.actions = this.config.actions || {};
+          this.config.actions.autonomy = autonomy;
+        }
+
+        const blockedPatternsCandidate =
+          updates.actions?.blockedPatterns ?? updates.autonomy?.blockedPatterns;
+        if (blockedPatternsCandidate !== undefined) {
+          if (!Array.isArray(blockedPatternsCandidate) || blockedPatternsCandidate.some((p) => typeof p !== 'string')) {
+            return res.status(400).json({
+              success: false,
+              error: 'blockedPatterns must be an array of strings',
+            });
+          }
+
+          this.config.actions = this.config.actions || {};
+          this.config.actions.blockedPatterns = blockedPatternsCandidate;
+          this.actionGateway.blockedPatterns = blockedPatternsCandidate;
+        }
+
         this.emit('configUpdated', this.config);
         res.json({ success: true });
       } catch (err) {
@@ -336,8 +379,142 @@ export class HttpServer extends EventEmitter {
       }
     });
 
+    // Skills API endpoints
+    this.setupSkillsRoutes(telemetry);
+
     // Serve dashboard static files
     this.setupDashboard();
+  }
+
+  /**
+   * Set up skills API routes
+   */
+  setupSkillsRoutes(telemetry) {
+    // Get all skills
+    this.app.get('/skills', (req, res) => {
+      try {
+        const skillsExecutor = this.actionGateway.engines?.skills;
+        if (!skillsExecutor) {
+          return res.json({ skills: [], message: 'Skills not initialized' });
+        }
+
+        const skills = skillsExecutor
+          .listSkills()
+          .map((skill) => this.withSkillMetadata(skill, skill?._authored === true));
+        res.json({ skills });
+      } catch (err) {
+        telemetry.recordError('http', err, { route: '/skills' });
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    // Get a specific skill
+    this.app.get('/skills/:name', (req, res) => {
+      try {
+        const { name } = req.params;
+        const skillsExecutor = this.actionGateway.engines?.skills;
+
+        if (!skillsExecutor) {
+          return res.status(404).json({ error: 'Skills not initialized' });
+        }
+
+        const skill = skillsExecutor.registry?.get(name);
+        if (!skill) {
+          return res.status(404).json({ error: `Skill not found: ${name}` });
+        }
+
+        const isAuthored = skillsExecutor.isAuthored(name);
+        res.json(this.withSkillMetadata(skill.getMetadata(), isAuthored));
+      } catch (err) {
+        telemetry.recordError('http', err, { route: '/skills/:name' });
+        res.status(500).json({ error: err.message });
+      }
+    });
+
+    // Test a skill action
+    this.app.post('/skills/:name/test', async (req, res) => {
+      try {
+        const { name } = req.params;
+        const { action, ...params } = req.body;
+
+        const skillsExecutor = this.actionGateway.engines?.skills;
+        if (!skillsExecutor) {
+          return res.status(404).json({ error: 'Skills not initialized' });
+        }
+
+        if (!action || typeof action !== 'string') {
+          return res.status(400).json({ error: 'action is required and must be a string' });
+        }
+
+        const tier = skillsExecutor.getTier(name, action);
+        if (tier >= 3) {
+          return res.status(403).json({
+            success: false,
+            approvalRequired: true,
+            tier,
+            error: 'Skill test requires approval; execute via standard action flow',
+          });
+        }
+
+        telemetry.recordEvent('skills_test_requested', {
+          route: '/skills/:name/test',
+          source: 'dashboard_test',
+          skill: name,
+          action,
+          tier,
+        });
+
+        const result = await this.actionGateway.executeAction({
+          tool: 'skill',
+          tier,
+          intent: 'Dashboard skill test',
+          source: 'dashboard_test',
+          params: {
+            skill: name,
+            action,
+            ...params,
+          },
+        });
+
+        telemetry.recordEvent('skills_test_completed', {
+          route: '/skills/:name/test',
+          source: 'dashboard_test',
+          skill: name,
+          action,
+          tier,
+          success: result.success !== false,
+        });
+
+        res.json({ ...result, tier });
+      } catch (err) {
+        telemetry.recordError('http', err, { route: '/skills/:name/test' });
+        res.status(500).json({ error: err.message });
+      }
+    });
+  }
+
+  /**
+   * Add public metadata used by dashboard clients.
+   */
+  withSkillMetadata(skill, authored = false) {
+    const actions = Array.isArray(skill?.actions) ? skill.actions : [];
+    const tiers = actions
+      .map((action) => Number(action?.tier))
+      .filter((tier) => Number.isFinite(tier));
+
+    const minTier = tiers.length > 0 ? Math.min(...tiers) : null;
+    const maxTier = tiers.length > 0 ? Math.max(...tiers) : null;
+
+    return {
+      ...skill,
+      _authored: authored || skill?._authored === true,
+      tierSummary: {
+        actionCount: actions.length,
+        minTier,
+        maxTier,
+        requiresApproval: tiers.some((tier) => tier >= 3),
+      },
+    };
   }
 
   /**
@@ -395,6 +572,22 @@ npm run build</pre>
       this.server.close();
       this.server = null;
     }
+  }
+
+  /**
+   * Validate autonomy level values from runtime update payloads.
+   */
+  validateAutonomyLevel(value) {
+    return value === 'conservative' || value === 'balanced' || value === 'full_trust'
+      ? value
+      : null;
+  }
+
+  /**
+   * Safe fallback when ActionGateway helper is unavailable.
+   */
+  getAutonomyLevelFallback() {
+    return this.validateAutonomyLevel(this.config.actions?.autonomy) || 'balanced';
   }
 
   /**
