@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "types": ["node"],
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noUncheckedIndexedAccess": false,
+    "useUnknownInCatchVariables": false
+  },
+  "include": ["scripts/**/*.ts", "src/types/vendor.d.ts"],
+  "exclude": ["node_modules", "dist", "scripts/soak/**/*.ts", "scripts/test/**/*.ts"]
+}

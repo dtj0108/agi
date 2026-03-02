@@ -26,6 +26,8 @@ export interface EntityConfig {
   cognitive: CognitiveConfig;
   actions: ActionConfig;
   interface: InterfaceConfig;
+  auth: AuthConfig;
+  autonomy: AutonomyConfig;
   heartbeat: HeartbeatConfig;
   logging: LoggingConfig;
   security: SecurityConfig;
@@ -44,6 +46,7 @@ export interface LLMConfig {
   api: 'anthropic-messages' | 'openai-completions';
   baseUrl: string;
   apiKey: string;
+  credentialSource: 'config' | 'auth_store' | 'auto';
   model: string;
   maxTokens: number;
   temperature: number;
@@ -87,6 +90,9 @@ export interface CognitiveConfig {
 }
 
 export type AutonomyLevel = 'conservative' | 'balanced' | 'full_trust';
+export type AutonomyMode = 'manual' | 'heartbeat' | 'go';
+export type AuthMode = 'api_key' | 'oauth' | 'hybrid';
+export type AuthFlow = 'auto' | 'browser' | 'device_code';
 
 export interface ActionConfig {
   autonomy: AutonomyLevel;
@@ -95,6 +101,14 @@ export interface ActionConfig {
   files: FilesConfig;
   blockedPatterns: string[];
   approvalTimeout: number;
+}
+
+export interface AutonomyConfig {
+  mode: AutonomyMode;
+  go: {
+    minDelayMs: number;
+    maxConsecutiveErrors: number;
+  };
 }
 
 export interface ShellConfig {
@@ -127,6 +141,25 @@ export interface InterfaceConfig {
   enableCli: boolean;
   corsOrigins: string[];
   apiKey: string | null;
+}
+
+export interface AuthConfig {
+  mode: AuthMode;
+  oauth: {
+    provider: 'oidc';
+    issuer: string;
+    clientId: string;
+    scopes: string[];
+    flow: AuthFlow;
+    callbackHost: string;
+    callbackPort: number;
+    callbackPortRange: number;
+    extraAuthorizeParams?: Record<string, string>;
+  };
+  storage: {
+    mode: 'keychain_fallback_file';
+    filePath: string;
+  };
 }
 
 export interface HeartbeatConfig {

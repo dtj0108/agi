@@ -1,0 +1,141 @@
+import { useState, useEffect, useCallback } from "react"
+import { Shell } from "@/components/layout/Shell"
+import { Dashboard } from "@/pages/Dashboard"
+import { Config } from "@/pages/Config"
+import { Skills } from "@/pages/Skills"
+import { Mind } from "@/pages/Mind"
+import { Monitor } from "@/pages/Monitor"
+import { Chat } from "@/pages/Chat"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import {
+  useEntityStatus,
+  useEntitySocket,
+  useThoughts,
+  useActionHistory,
+  usePendingApprovals,
+  useTheme,
+} from "@/lib/hooks"
+import api from "@/lib/api"
+
+function App() {
+  const [currentPage, setCurrentPage] = useState("dashboard")
+  const { theme, toggle: toggleTheme } = useTheme()
+  const { status, refresh: refreshStatus, setStatus } = useEntityStatus()
+  const { thoughts, addThought } = useThoughts()
+  const { actions, addAction, refresh: refreshActions } = useActionHistory()
+  const { approvals, approve, deny, addApproval, refresh: refreshApprovals } = usePendingApprovals()
+  const [emotions, setEmotions] = useState(null)
+  const [authStatus, setAuthStatus] = useState(null)
+
+  // WebSocket connection
+  const { connected } = useEntitySocket({
+    onStatus: setStatus,
+    onThought: addThought,
+    onAction: addAction,
+    onEmotion: setEmotions,
+    onApprovalRequired: addApproval,
+  })
+
+  const refreshAuthStatus = useCallback(async () => {
+    try {
+      const auth = await api.getAuthStatus()
+      setAuthStatus(auth)
+    } catch {
+      setAuthStatus(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshAuthStatus()
+  }, [refreshAuthStatus])
+
+  // Refresh all data
+  const refresh = useCallback(() => {
+    refreshStatus()
+    refreshActions()
+    refreshApprovals()
+    refreshAuthStatus()
+  }, [refreshStatus, refreshActions, refreshApprovals, refreshAuthStatus])
+
+  // Pause/Resume handlers
+  const handleTogglePause = useCallback(async () => {
+    if (status?.state === "paused") {
+      await api.resume()
+    } else {
+      await api.pause()
+    }
+    refreshStatus()
+  }, [status, refreshStatus])
+
+  const handleToggleGo = useCallback(async () => {
+    const mode = status?.autonomy?.mode || "manual"
+    if (mode === "go") {
+      await api.stopGo()
+    } else {
+      await api.go()
+    }
+    refreshStatus()
+  }, [status, refreshStatus])
+
+  // Render current page
+  function renderPage() {
+    switch (currentPage) {
+      case "dashboard":
+        return (
+          <Dashboard
+            status={status}
+            thoughts={thoughts}
+            actions={actions}
+            emotions={emotions}
+          />
+        )
+      case "config":
+        return <Config />
+      case "skills":
+        return <Skills />
+      case "mind":
+        return <Mind />
+      case "monitor":
+        return (
+          <Monitor
+            status={status}
+            thoughts={thoughts}
+            actions={actions}
+            approvals={approvals}
+            onApprove={approve}
+            onDeny={deny}
+          />
+        )
+      case "chat":
+        return <Chat />
+      default:
+        return (
+          <Dashboard
+            status={status}
+            thoughts={thoughts}
+            actions={actions}
+            emotions={emotions}
+          />
+        )
+    }
+  }
+
+  return (
+    <TooltipProvider>
+      <Shell
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        status={{ ...status, connected, auth: authStatus || status?.auth }}
+        onRefresh={refresh}
+        onTogglePause={handleTogglePause}
+        onToggleGo={handleToggleGo}
+      >
+        {renderPage()}
+      </Shell>
+    </TooltipProvider>
+  )
+}
+
+export default App

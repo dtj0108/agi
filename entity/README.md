@@ -88,15 +88,19 @@ npm install
 # 2. Run the onboarding wizard
 npm run onboard
 
-# 3. Start Entity
+# 3. Build dist runtime and start Entity
+npm run build
 npm start
 ```
 
 The onboarding wizard walks you through:
 - Setting up your LLM provider (Anthropic, OpenAI, Ollama, etc.)
+- Choosing API key or local OAuth login for OpenAI-compatible providers
 - Naming and configuring your entity's personality
 - Choosing an autonomy level (conservative, balanced, full trust)
 - Initializing the mind filesystem
+
+TypeScript cutover notes and temporary tracked exceptions are documented in `docs/TS_MIGRATION_EXCEPTIONS.md`.
 
 ## The 7-Phase Cognitive Loop
 
@@ -178,6 +182,9 @@ entity doctor             # Health check
 entity history            # Git history of mind
 entity rollback <hash>    # Restore previous state
 entity reset              # Factory reset (careful!)
+entity login              # Local OAuth sign-in
+entity logout             # Clear stored OAuth credentials
+entity auth-status        # Show current auth source/status
 ```
 
 ## Configuration
@@ -201,6 +208,7 @@ llm: {
   api: 'openai-completions',
   baseUrl: 'https://api.openai.com/v1',
   apiKey: process.env.OPENAI_API_KEY,
+  credentialSource: 'auto', // 'config' | 'auth_store' | 'auto'
   model: 'gpt-4o',
 }
 
@@ -221,6 +229,40 @@ llm: {
 }
 ```
 
+### Local OAuth (Terminal-First)
+
+Entity supports local-only OAuth for model credentials (no public callback URL required):
+
+```javascript
+auth: {
+  mode: 'hybrid', // 'api_key' | 'oauth' | 'hybrid'
+  oauth: {
+    provider: 'oidc',
+    issuer: 'https://auth.example.com',
+    clientId: 'your-client-id',
+    scopes: ['openid', 'profile', 'email', 'offline_access'],
+    flow: 'auto', // browser loopback, device-code fallback when headless
+    callbackHost: '127.0.0.1',
+    callbackPort: 1455,
+    callbackPortRange: 25,
+  },
+  storage: {
+    mode: 'keychain_fallback_file',
+    filePath: './.entity/auth.json',
+  },
+}
+```
+
+Use:
+
+```bash
+entity login --issuer https://auth.example.com --client-id your-client-id
+entity auth-status
+entity logout
+```
+
+Note: OpenAI-style OAuth requires your own valid OIDC client registration with the provider. API key auth remains fully supported as fallback.
+
 ### Autonomy Levels
 
 Autonomy is enforced from `actions.autonomy`.
@@ -231,9 +273,27 @@ Autonomy is enforced from `actions.autonomy`.
 | `balanced` | Auto | Auto (logged) | Approval | Approval |
 | `full_trust` | Auto | Auto (logged) | Auto (policy logged) | Auto (policy logged) |
 
+### Runtime Autonomy Modes
+
+Runtime mode is configured via `autonomy.mode`:
+
+```javascript
+autonomy: {
+  mode: 'go', // 'manual' | 'heartbeat' | 'go'
+  go: {
+    minDelayMs: 2000,
+    maxConsecutiveErrors: 3,
+  },
+}
+```
+
+- `manual`: no automatic cycles
+- `heartbeat`: scheduled cron cycles
+- `go`: continuous autonomous cycles with failure guardrails
+
 ### Heartbeat
 
-Entity can run autonomously on a schedule:
+Heartbeat is optional and used by `autonomy.mode = "heartbeat"`:
 
 ```javascript
 heartbeat: {
@@ -312,7 +372,7 @@ entity/
 │   ├── mind-server/             # Filesystem + search + git
 │   ├── action-gateway/          # Security enforcement
 │   ├── execution-engines/       # Shell, browser, files
-│   ├── interface/               # HTTP, WebSocket, CLI, heartbeat
+│   ├── interface/               # HTTP, WebSocket, CLI, autonomy controller
 │   ├── cli/commands/            # CLI command handlers
 │   ├── observability/           # Telemetry
 │   └── utils/                   # Config, logging, checksums

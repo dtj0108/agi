@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: entity
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            entity/package-lock.json
+            entity/dashboard/package-lock.json
+
+      - name: Install entity dependencies
+        run: npm ci
+
+      - name: Typecheck entity
+        run: npm run typecheck
+
+      - name: Check migration guardrails
+        run: npm run check:migration
+
+      - name: Build entity
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck and build dashboard
+        run: |
+          cd dashboard
+          npm ci
+          npm run typecheck
+          npm run build

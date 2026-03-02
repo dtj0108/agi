@@ -116,12 +116,50 @@ Get the entity's current status including emotional state, cycle count, and heal
     "momentum": "stable"
   },
   "paused": false,
+  "autonomy": {
+    "mode": "go",
+    "paused": false,
+    "go": {
+      "running": true,
+      "minDelayMs": 2000,
+      "maxConsecutiveErrors": 3,
+      "consecutiveErrors": 0
+    }
+  },
+  "auth": {
+    "mode": "hybrid",
+    "provider": "oidc",
+    "loggedIn": true,
+    "expiresAt": "2026-03-02T18:20:00.000Z",
+    "source": "oauth"
+  },
   "uptime": 3600.5,
   "health": {
     "cyclesLast60m": 15,
     "errorsLast60m": 0,
     "avgCycleDurationMs": 2500
   }
+}
+```
+
+---
+
+#### Get Auth Status
+
+```http
+GET /auth/status
+```
+
+Get local credential status used for LLM authentication. No secrets are returned.
+
+**Response:**
+```json
+{
+  "mode": "hybrid",
+  "provider": "oidc",
+  "loggedIn": true,
+  "expiresAt": "2026-03-02T18:20:00.000Z",
+  "source": "oauth"
 }
 ```
 
@@ -226,6 +264,71 @@ Get recent action history from the audit log.
 
 ---
 
+#### Get Config
+
+```http
+GET /config
+```
+
+Get runtime-safe configuration values.
+
+**Response:**
+```json
+{
+  "llm": {
+    "model": "claude-sonnet-4-5-20250514",
+    "maxTokens": 8192,
+    "temperature": 0.7,
+    "promptCaching": true
+  },
+  "actions": {
+    "autonomy": "balanced",
+    "blockedPatterns": ["rm -rf /"]
+  },
+  "autonomy": {
+    "mode": "go",
+    "go": {
+      "minDelayMs": 2000,
+      "maxConsecutiveErrors": 3
+    },
+    "level": "balanced",
+    "blockedPatterns": ["rm -rf /"]
+  },
+  "heartbeat": {
+    "enabled": true,
+    "schedule": "*/30 * * * *",
+    "prompt": "Check my goals..."
+  }
+}
+```
+
+---
+
+#### Update Config
+
+```http
+PUT /config
+Content-Type: application/json
+```
+
+Update runtime configuration. Supports canonical autonomy fields:
+- `autonomy.mode`
+- `autonomy.go.minDelayMs`
+- `autonomy.go.maxConsecutiveErrors`
+
+Also supports legacy compatibility payloads:
+- `autonomy.level`
+- `autonomy.blockedPatterns`
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+---
+
 #### Rollback Mind
 
 ```http
@@ -281,6 +384,46 @@ Resume a paused entity.
 ```json
 {
   "paused": false
+}
+```
+
+---
+
+#### Start Continuous Autonomy (`go`)
+
+```http
+POST /go
+```
+
+Switch runtime mode to continuous autonomy.
+
+**Response:**
+```json
+{
+  "success": true,
+  "autonomy": {
+    "mode": "go"
+  }
+}
+```
+
+---
+
+#### Stop Continuous Autonomy
+
+```http
+POST /stop
+```
+
+Switch runtime mode to manual (stops automatic `go` cycles).
+
+**Response:**
+```json
+{
+  "success": true,
+  "autonomy": {
+    "mode": "manual"
+  }
 }
 ```
 
@@ -548,9 +691,11 @@ The Entity CLI provides interactive management commands.
 entity <command> [options]
 
 # From project directory
-npm run entity <command>
-node src/cli/index.js <command>
+npm run build
+node dist/cli/index.js <command>
 ```
+
+Compatibility (release N only): `node src/cli/index.js <command>` still works with a deprecation warning.
 
 ### Commands
 
@@ -585,6 +730,35 @@ Output includes:
 - Cycle count
 - Active goals count
 - Last activity timestamp
+
+#### login
+
+Run local OAuth sign-in flow for model credentials.
+
+```bash
+entity login
+entity login --device-code
+entity login --issuer https://auth.example.com --client-id your-client-id
+entity login --no-browser
+```
+
+OpenAI-style OAuth is provider-agnostic and requires a valid client registration with your issuer. API key auth remains supported.
+
+#### logout
+
+Clear locally stored OAuth credentials.
+
+```bash
+entity logout
+```
+
+#### auth-status
+
+Show local auth source and expiry status.
+
+```bash
+entity auth-status
+```
 
 #### chat
 
@@ -714,6 +888,7 @@ llm: {
   api: 'anthropic-messages',   // 'anthropic-messages' or 'openai-completions'
   baseUrl: 'https://api.anthropic.com/v1',
   apiKey: process.env.ANTHROPIC_API_KEY,
+  credentialSource: 'auto',    // 'config' | 'auth_store' | 'auto'
   model: 'claude-sonnet-4-5-20250514',
   maxTokens: 8192,
   temperature: 0.7,
@@ -721,6 +896,28 @@ llm: {
   retryAttempts: 3,
   retryDelayMs: 1000,
   timeoutMs: 120000,
+}
+```
+
+### Local Auth Configuration
+
+```javascript
+auth: {
+  mode: 'hybrid',               // 'api_key' | 'oauth' | 'hybrid'
+  oauth: {
+    provider: 'oidc',
+    issuer: 'https://auth.example.com',
+    clientId: 'your-client-id',
+    scopes: ['openid', 'profile', 'email', 'offline_access'],
+    flow: 'auto',               // 'auto' | 'browser' | 'device_code'
+    callbackHost: '127.0.0.1',
+    callbackPort: 1455,
+    callbackPortRange: 25,
+  },
+  storage: {
+    mode: 'keychain_fallback_file',
+    filePath: './.entity/auth.json',
+  },
 }
 ```
 
@@ -763,6 +960,23 @@ actions: {
 
 Runtime override: set `ENTITY_ACTIONS_AUTONOMY` to `conservative`, `balanced`, or `full_trust`.
 
+### Autonomy Runtime Settings
+
+```javascript
+autonomy: {
+  mode: 'go', // 'manual' | 'heartbeat' | 'go'
+  go: {
+    minDelayMs: 2000,
+    maxConsecutiveErrors: 3,
+  },
+}
+```
+
+Runtime overrides:
+- `ENTITY_AUTONOMY_MODE`
+- `ENTITY_AUTONOMY_GO_MIN_DELAY_MS`
+- `ENTITY_AUTONOMY_GO_MAX_CONSECUTIVE_ERRORS`
+
 ### Interface Settings
 
 ```javascript
@@ -776,7 +990,7 @@ interface: {
 }
 ```
 
-### Heartbeat Settings
+### Heartbeat Settings (used when `autonomy.mode = "heartbeat"`)
 
 ```javascript
 heartbeat: {

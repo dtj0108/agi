@@ -5,36 +5,22 @@
  * Used to detect unauthorized modifications.
  */
 
-import { createHash, BinaryLike } from 'crypto';
+import { createHash } from 'crypto';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { readdir } from 'fs/promises';
 import { join, relative } from 'path';
 
-export type ChecksumMap = Record<string, string>;
-
-export interface ChecksumDifferences {
-  modified: string[];
-  added: string[];
-  removed: string[];
-}
-
-export interface VerificationResult {
-  valid: boolean;
-  differences: ChecksumDifferences;
-  currentChecksums: ChecksumMap;
-}
-
 /**
  * Compute SHA-256 hash of a string or buffer
  */
-export function computeChecksum(content: BinaryLike): string {
+export function computeChecksum(content: any) {
   return createHash('sha256').update(content).digest('hex');
 }
 
 /**
  * Compute checksum of a file
  */
-export function computeFileChecksum(filePath: string): string {
+export function computeFileChecksum(filePath: any) {
   const content = readFileSync(filePath);
   return computeChecksum(content);
 }
@@ -42,7 +28,7 @@ export function computeFileChecksum(filePath: string): string {
 /**
  * Recursively get all files in a directory
  */
-async function getAllFiles(dirPath: string, files: string[] = []): Promise<string[]> {
+async function getAllFiles(dirPath: any, files: any = []) {
   const entries = await readdir(dirPath, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -66,31 +52,31 @@ async function getAllFiles(dirPath: string, files: string[] = []): Promise<strin
 /**
  * Load checksums from file
  */
-export function loadChecksums(checksumsPath: string): ChecksumMap {
+export function loadChecksums(checksumsPath: any) {
   if (!existsSync(checksumsPath)) {
-    return {};
+    return {} as Record<string, string>;
   }
 
   try {
     const content = readFileSync(checksumsPath, 'utf-8');
-    return JSON.parse(content) as ChecksumMap;
+    return JSON.parse(content) as Record<string, string>;
   } catch {
-    return {};
+    return {} as Record<string, string>;
   }
 }
 
 /**
  * Save checksums to file
  */
-export function saveChecksums(checksumsPath: string, checksums: ChecksumMap): void {
+export function saveChecksums(checksumsPath: any, checksums: any) {
   writeFileSync(checksumsPath, JSON.stringify(checksums, null, 2));
 }
 
 /**
  * Compute checksums for all files in a directory
  */
-export async function computeDirectoryChecksums(dirPath: string): Promise<ChecksumMap> {
-  const checksums: ChecksumMap = {};
+export async function computeDirectoryChecksums(dirPath: any) {
+  const checksums: Record<string, string> = {};
   const files = await getAllFiles(dirPath);
 
   for (const file of files) {
@@ -104,13 +90,10 @@ export async function computeDirectoryChecksums(dirPath: string): Promise<Checks
 /**
  * Verify checksums and return differences
  */
-export async function verifyChecksums(
-  dirPath: string,
-  storedChecksums: ChecksumMap
-): Promise<VerificationResult> {
+export async function verifyChecksums(dirPath: any, storedChecksums: any) {
   const currentChecksums = await computeDirectoryChecksums(dirPath);
 
-  const differences: ChecksumDifferences = {
+  const differences: { modified: string[]; added: string[]; removed: string[] } = {
     modified: [],
     added: [],
     removed: [],
@@ -133,10 +116,9 @@ export async function verifyChecksums(
   }
 
   return {
-    valid:
-      differences.modified.length === 0 &&
-      differences.added.length === 0 &&
-      differences.removed.length === 0,
+    valid: differences.modified.length === 0 &&
+           differences.added.length === 0 &&
+           differences.removed.length === 0,
     differences,
     currentChecksums,
   };
@@ -145,11 +127,7 @@ export async function verifyChecksums(
 /**
  * Update a single file's checksum
  */
-export function updateFileChecksum(
-  checksumsPath: string,
-  filePath: string,
-  basePath: string
-): string {
+export function updateFileChecksum(checksumsPath: any, filePath: any, basePath: any) {
   const checksums = loadChecksums(checksumsPath);
   const relativePath = relative(basePath, filePath);
   checksums[relativePath] = computeFileChecksum(filePath);
@@ -160,11 +138,7 @@ export function updateFileChecksum(
 /**
  * Remove a file's checksum entry
  */
-export function removeFileChecksum(
-  checksumsPath: string,
-  filePath: string,
-  basePath: string
-): void {
+export function removeFileChecksum(checksumsPath: any, filePath: any, basePath: any) {
   const checksums = loadChecksums(checksumsPath);
   const relativePath = relative(basePath, filePath);
   delete checksums[relativePath];

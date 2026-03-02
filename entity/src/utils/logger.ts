@@ -7,11 +7,8 @@
 import { appendFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
-// Log levels
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
 // ANSI color codes
-export const colors = {
+const colors = {
   reset: '\x1b[0m',
   dim: '\x1b[2m',
   red: '\x1b[31m',
@@ -21,42 +18,27 @@ export const colors = {
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
   white: '\x1b[37m',
-} as const;
+};
 
-interface LevelConfig {
-  priority: number;
-  color: string;
-  label: string;
-}
-
-const levelConfig: Record<LogLevel, LevelConfig> = {
+const levelConfig = {
   debug: { priority: 0, color: colors.dim, label: 'DEBUG' },
   info: { priority: 1, color: colors.cyan, label: 'INFO' },
   warn: { priority: 2, color: colors.yellow, label: 'WARN' },
   error: { priority: 3, color: colors.red, label: 'ERROR' },
 };
 
-export interface LoggerOptions {
-  level?: LogLevel;
-  colorize?: boolean;
-  timestamps?: boolean;
-  logFile?: string | null;
-  context?: string | null;
-}
-
-export class Logger {
-  private level: LogLevel;
-  private colorize: boolean;
-  private timestamps: boolean;
-  private logFile: string | null;
-  private context: string | null;
-
-  constructor(options: LoggerOptions = {}) {
-    this.level = options.level ?? 'info';
+class Logger {
+  colorize: any;
+  context: any;
+  level: keyof typeof levelConfig;
+  logFile: any;
+  timestamps: any;
+  constructor(options: any = {}) {
+    this.level = (options.level || 'info') as keyof typeof levelConfig;
     this.colorize = options.colorize !== false;
     this.timestamps = options.timestamps !== false;
-    this.logFile = options.logFile ?? null;
-    this.context = options.context ?? null;
+    this.logFile = options.logFile || null;
+    this.context = options.context || null;
 
     // Ensure log directory exists
     if (this.logFile) {
@@ -71,7 +53,7 @@ export class Logger {
   /**
    * Create a child logger with additional context
    */
-  child(context: string): Logger {
+  child(context: any) {
     return new Logger({
       level: this.level,
       colorize: this.colorize,
@@ -84,9 +66,9 @@ export class Logger {
   /**
    * Format a log message
    */
-  private format(level: LogLevel, message: string, data?: unknown): string {
+  format(level: keyof typeof levelConfig, message: any, data: any) {
     const config = levelConfig[level];
-    const parts: string[] = [];
+    const parts: any[] = [];
 
     // Timestamp
     if (this.timestamps) {
@@ -119,7 +101,7 @@ export class Logger {
   /**
    * Core log method
    */
-  private log(level: LogLevel, message: string, data?: unknown): void {
+  log(level: keyof typeof levelConfig, message: any, data: any) {
     const config = levelConfig[level];
     const currentPriority = levelConfig[this.level]?.priority ?? 1;
 
@@ -138,7 +120,8 @@ export class Logger {
 
     // File output (without colors)
     if (this.logFile) {
-      const plainFormatted = formatted.replace(/\x1b\[[0-9;]*m/g, '');
+      const plainFormatted = this.format(level, message, data)
+        .replace(/\x1b\[[0-9;]*m/g, '');
       try {
         appendFileSync(this.logFile, plainFormatted + '\n');
       } catch {
@@ -147,37 +130,22 @@ export class Logger {
     }
   }
 
-  debug(message: string, data?: unknown): void {
-    this.log('debug', message, data);
-  }
-
-  info(message: string, data?: unknown): void {
-    this.log('info', message, data);
-  }
-
-  warn(message: string, data?: unknown): void {
-    this.log('warn', message, data);
-  }
-
-  error(message: string, data?: unknown): void {
-    this.log('error', message, data);
-  }
+  debug(message: any, data: any) { this.log('debug', message, data); }
+  info(message: any, data: any) { this.log('info', message, data); }
+  warn(message: any, data: any) { this.log('warn', message, data); }
+  error(message: any, data: any) { this.log('error', message, data); }
 }
 
 // Default logger instance (will be configured on startup)
 let defaultLogger = new Logger();
 
-/**
- * Configure the default logger instance
- */
-export function configureLogger(options: LoggerOptions): Logger {
+export function configureLogger(options: any) {
   defaultLogger = new Logger(options);
   return defaultLogger;
 }
 
-/**
- * Get a logger instance, optionally with context
- */
-export function getLogger(context?: string): Logger {
+export function getLogger(context: any) {
   return context ? defaultLogger.child(context) : defaultLogger;
 }
+
+export { Logger, colors };

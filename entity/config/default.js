@@ -45,6 +45,7 @@ export default {
     retryDelayMs: 1000,
     timeoutMs: 120000,
     maxJsonRepairAttempts: 1,
+    credentialSource: 'auto', // 'config' | 'auth_store' | 'auto'
   },
 
   // Embedding Configuration (for vector search)
@@ -134,6 +135,35 @@ export default {
     enableCli: true,
     corsOrigins: ['http://localhost:3000'],
     apiKey: null,
+  },
+
+  // Local auth configuration (LLM credentials)
+  auth: {
+    mode: 'hybrid', // 'api_key' | 'oauth' | 'hybrid'
+    oauth: {
+      provider: 'oidc',
+      issuer: '',
+      clientId: '',
+      scopes: ['openid', 'profile', 'email', 'offline_access'],
+      flow: 'auto', // 'auto' | 'browser' | 'device_code'
+      callbackHost: '127.0.0.1',
+      callbackPort: 1455,
+      callbackPortRange: 25,
+      extraAuthorizeParams: {},
+    },
+    storage: {
+      mode: 'keychain_fallback_file', // currently only supported mode
+      filePath: './.entity/auth.json',
+    },
+  },
+
+  // Autonomy runtime mode
+  autonomy: {
+    mode: 'go', // 'manual' | 'heartbeat' | 'go'
+    go: {
+      minDelayMs: 2000,
+      maxConsecutiveErrors: 3,
+    },
   },
 
   // Heartbeat (autonomous cycles)
