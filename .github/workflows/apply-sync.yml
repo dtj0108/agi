@@ -1,6 +1,6 @@
-# Temporary workflow: applies a base64-encoded tarball of source files pushed
-# under .sync/ to this branch (sha256-gated), rebuilds dist, and pushes the
-# result. Removed after use.
+# Temporary workflow: rebuilds entity/dist from a clean slate (the previous
+# incremental build reused a stale .tsbuildinfo) and pushes the result.
+# Removed after use.
 name: apply-sync
 on:
   workflow_dispatch:
@@ -21,22 +21,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Apply source payload
-        run: |
-          set -euo pipefail
-          cat .sync/payload.part-* > /tmp/payload.b64
-          python3 -c "$(printf 'data = list(open(\"/tmp/payload.b64\").read())\nfor pos, ch in [(8225, \"l\"), (12898, \"2\"), (117472, \"9\")]:\n    data[pos] = ch\nopen(\"/tmp/payload.b64\", \"w\").write(\"\".join(data))\n')"
-          base64 -d /tmp/payload.b64 > /tmp/payload.tar.gz
-          echo "1bc214df1a5135d7c8e8e6a28ecfd195e58fd5573d08eb06e95ee53f021d6f98  /tmp/payload.tar.gz" | sha256sum -c
-          tar xzf /tmp/payload.tar.gz -C .
-          rm -f entity/src/index.js entity/src/cli/index.js
-          rm -rf .sync
-      - name: Rebuild dist and typecheck
+      - name: Clean rebuild and verify
         env:
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
         run: |
           set -euo pipefail
           cd entity
+          rm -rf dist tsconfig.scripts.tsbuildinfo tsconfig.tests.tsbuildinfo
           npm ci
           npm run build
           npm run typecheck
@@ -45,8 +36,9 @@ jobs:
       - name: Commit and push
         run: |
           set -euo pipefail
+          rm -rf .sync
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add -A
-          git commit -m "Apply TS migration cleanup: strict tsconfigs, resolved ts-migration markers, dist rebuild"
+          git commit -m "Rebuild dist from clean state"
           git push origin HEAD:claude/chat-session-8zy93t
