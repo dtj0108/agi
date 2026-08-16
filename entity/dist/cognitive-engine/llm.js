@@ -237,12 +237,7 @@ export class LLM {
         const maxRepairAttempts = Math.max(0, options.maxRepairAttempts ?? this.maxJsonRepairAttempts);
         const fallbackFactory = options.fallbackFactory;
         const validate = this.getValidator(schema);
-        const jsonInstruction = `
-
-Respond ONLY with a JSON object matching this JSON Schema:
-${JSON.stringify(schema, null, 2)}
-
-Do not include markdown code fences. Output raw JSON only.`;
+        const jsonInstruction = `\n\nRespond ONLY with a JSON object matching this JSON Schema:\n${JSON.stringify(schema, null, 2)}\n\nDo not include markdown code fences. Output raw JSON only.`;
         const basePrompt = this.appendToSystemPrompt(systemPrompt, jsonInstruction);
         let currentPrompt = basePrompt;
         let repairAttemptsUsed = 0;
@@ -346,12 +341,7 @@ Do not include markdown code fences. Output raw JSON only.`;
      * Build repair instruction for invalid JSON/schema attempts
      */
     buildRepairInstruction(reason) {
-        return `
-
-CRITICAL: Your previous response was invalid.
-Reason: ${reason}
-Output ONLY a JSON object that fully matches the required schema.
-Do not include commentary or markdown fences.`;
+        return `\n\nCRITICAL: Your previous response was invalid.\nReason: ${reason}\nOutput ONLY a JSON object that fully matches the required schema.\nDo not include commentary or markdown fences.`;
     }
     /**
      * Parse JSON from LLM response, handling markdown fences
@@ -380,7 +370,6 @@ Do not include commentary or markdown fences.`;
             const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
             const error = new Error(`Rate limited. Retry after ${retryAfter}s`);
             error.name = 'RateLimitError';
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'retryAfter' does not exist on type 'Erro... Remove this comment to see the full error message
             error.retryAfter = retryAfter;
             throw error;
         }
@@ -391,7 +380,6 @@ Do not include commentary or markdown fences.`;
         }
         const error = new Error(`LLM API error: ${status} - ${body}`);
         error.name = 'LLMError';
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'status' does not exist on type 'Error'.
         error.status = status;
         this.telemetry.recordEvent('llm_api_error', { status });
         throw error;
