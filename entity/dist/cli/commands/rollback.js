@@ -43,7 +43,6 @@ export default async function rollback(args, projectRoot) {
         rl.question('This will discard all changes since this commit. Continue? (y/N) ', resolve);
     });
     rl.close();
-    // @ts-expect-error TODO(ts-migration): TS(2339): Property 'toLowerCase' does not exist on type 'unk... Remove this comment to see the full error message
     if (answer.toLowerCase() !== 'y') {
         console.log('Cancelled.');
         process.exit(0);
