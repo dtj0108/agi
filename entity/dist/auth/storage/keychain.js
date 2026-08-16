@@ -33,17 +33,13 @@ export class KeychainAuthStorage {
             return null;
         try {
             if (process.platform === 'darwin') {
-                const value = execFileSync('security', ['find-generic-password', '-a', this.account, '-s', this.service, '-w'], 
-                // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-                { encoding: 'utf-8', stdio: QUIET_STDIO }).trim();
+                const value = execFileSync('security', ['find-generic-password', '-a', this.account, '-s', this.service, '-w'], { encoding: 'utf-8', stdio: QUIET_STDIO }).trim();
                 if (!value)
                     return null;
                 return JSON.parse(value);
             }
             if (process.platform === 'linux') {
-                const value = execFileSync('secret-tool', ['lookup', 'service', this.service, 'account', this.account], 
-                // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-                { encoding: 'utf-8', stdio: QUIET_STDIO }).trim();
+                const value = execFileSync('secret-tool', ['lookup', 'service', this.service, 'account', this.account], { encoding: 'utf-8', stdio: QUIET_STDIO }).trim();
                 if (!value)
                     return null;
                 return JSON.parse(value);
@@ -60,9 +56,7 @@ export class KeychainAuthStorage {
         }
         const serialized = JSON.stringify(payload);
         if (process.platform === 'darwin') {
-            execFileSync('security', ['add-generic-password', '-U', '-a', this.account, '-s', this.service, '-w', serialized], 
-            // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-            { encoding: 'utf-8', stdio: QUIET_STDIO });
+            execFileSync('security', ['add-generic-password', '-U', '-a', this.account, '-s', this.service, '-w', serialized], { encoding: 'utf-8', stdio: QUIET_STDIO });
             return;
         }
         if (process.platform === 'linux') {
@@ -74,9 +68,7 @@ export class KeychainAuthStorage {
                 this.service,
                 'account',
                 this.account,
-            ], 
-            // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-            { input: serialized, encoding: 'utf-8', stdio: QUIET_STDIO });
+            ], { input: serialized, encoding: 'utf-8', stdio: QUIET_STDIO });
             return;
         }
         throw new Error('Keychain storage unavailable on this platform');
@@ -86,15 +78,11 @@ export class KeychainAuthStorage {
             return;
         try {
             if (process.platform === 'darwin') {
-                execFileSync('security', ['delete-generic-password', '-a', this.account, '-s', this.service], 
-                // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-                { encoding: 'utf-8', stdio: QUIET_STDIO });
+                execFileSync('security', ['delete-generic-password', '-a', this.account, '-s', this.service], { encoding: 'utf-8', stdio: QUIET_STDIO });
                 return;
             }
             if (process.platform === 'linux') {
-                execFileSync('secret-tool', ['clear', 'service', this.service, 'account', this.account], 
-                // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
-                { encoding: 'utf-8', stdio: QUIET_STDIO });
+                execFileSync('secret-tool', ['clear', 'service', this.service, 'account', this.account], { encoding: 'utf-8', stdio: QUIET_STDIO });
             }
         }
         catch {
