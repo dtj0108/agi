@@ -237,7 +237,12 @@ export class LLM {
         const maxRepairAttempts = Math.max(0, options.maxRepairAttempts ?? this.maxJsonRepairAttempts);
         const fallbackFactory = options.fallbackFactory;
         const validate = this.getValidator(schema);
-        const jsonInstruction = `\n\nRespond ONLY with a JSON object matching this JSON Schema:\n${JSON.stringify(schema, null, 2)}\n\nDo not include markdown code fences. Output raw JSON only.`;
+        const jsonInstruction = `
+
+Respond ONLY with a JSON object matching this JSON Schema:
+${JSON.stringify(schema, null, 2)}
+
+Do not include markdown code fences. Output raw JSON only.`;
         const basePrompt = this.appendToSystemPrompt(systemPrompt, jsonInstruction);
         let currentPrompt = basePrompt;
         let repairAttemptsUsed = 0;
@@ -341,7 +346,12 @@ export class LLM {
      * Build repair instruction for invalid JSON/schema attempts
      */
     buildRepairInstruction(reason) {
-        return `\n\nCRITICAL: Your previous response was invalid.\nReason: ${reason}\nOutput ONLY a JSON object that fully matches the required schema.\nDo not include commentary or markdown fences.`;
+        return `
+
+CRITICAL: Your previous response was invalid.
+Reason: ${reason}
+Output ONLY a JSON object that fully matches the required schema.
+Do not include commentary or markdown fences.`;
     }
     /**
      * Parse JSON from LLM response, handling markdown fences
