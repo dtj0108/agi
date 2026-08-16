@@ -1,11 +1,9 @@
-# Temporary workflow: applies a base64-encoded tarball payload pushed under
-# .sync/ to this branch, verifying its checksum first. Removed after use.
+# Temporary workflow: applies a base64-encoded tarball of source files pushed
+# under .sync/ to this branch (sha256-gated), rebuilds dist, and pushes the
+# result. Removed after use.
 name: apply-sync
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.sync/go'
 permissions:
   contents: write
 jobs:
@@ -15,15 +13,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: claude/chat-session-8zy93t
-      - name: Apply payload
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply source payload
         run: |
           set -euo pipefail
           cat .sync/payload.part-* > /tmp/payload.b64
           base64 -d /tmp/payload.b64 > /tmp/payload.tar.gz
-          echo "d3f7c306643658d33409849577799cdd3a2791a01cd6aecb60565d789d8ef31d  /tmp/payload.tar.gz" | sha256sum -c
+          echo "1bc214df1a5135d7c8e8e6a28ecfd195e58fd5573d08eb06e95ee53f021d6f98  /tmp/payload.tar.gz" | sha256sum -c
           tar xzf /tmp/payload.tar.gz -C .
           rm -f entity/src/index.js entity/src/cli/index.js
           rm -rf .sync
+      - name: Rebuild dist and typecheck
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+        run: |
+          set -euo pipefail
+          cd entity
+          npm ci
+          npm run build
+          npm run typecheck
+          npm run check:migration
+          npm test
+      - name: Commit and push
+        run: |
+          set -euo pipefail
           git config user.name "Claude"
           git config user.email "noreply@anthropic.com"
           git add -A
