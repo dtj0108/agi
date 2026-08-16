@@ -135,7 +135,6 @@ export async function runLoopbackLogin({ provider, issuer, clientId, scopes, cal
         rejecter(new Error('OAuth login timed out waiting for callback'));
     }, timeoutMs);
     try {
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type '{}'.
         const { code } = await done;
         const tokens = await provider.exchangeAuthorizationCode({
             metadata,
