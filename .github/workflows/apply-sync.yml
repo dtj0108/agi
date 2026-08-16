@@ -4,6 +4,11 @@
 name: apply-sync
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/chat-session-8zy93t
+    paths:
+      - '.sync/go'
 permissions:
   contents: write
 jobs:
