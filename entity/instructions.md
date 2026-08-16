@@ -210,13 +210,6 @@ Potential log locations (depends on daemon install path used):
   - macOS service check:
     - `launchctl list | grep com.entity.daemon`
 
-## 10. One-Release Compatibility Shims
+## 10. Runtime Entry Points
 
-These commands still work in release N and print deprecation warnings:
-
-```bash
-node src/index.js
-node src/cli/index.js <command>
-```
-
-Use dist-first commands above moving forward.
+The runtime is dist-first. Use `npm start` / `node dist/index.js` for the daemon and `node dist/cli/index.js <command>` for the CLI. The former `src/index.js` and `src/cli/index.js` compatibility shims have been removed.

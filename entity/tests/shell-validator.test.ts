@@ -6,72 +6,84 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { parseCommand } from '../src/action-gateway/validator.js';
 
+// parseCommand returns a discriminated union of shapes; the tests probe
+// fields across branches, so widen locally to one optional-field view.
+type ParsedCommand = {
+  safe: boolean;
+  reason?: string | null;
+  segments?: Array<{ binary: string; args: string[] }>;
+};
+
+function parse(command: string): ParsedCommand {
+  return parseCommand(command) as ParsedCommand;
+}
+
 describe('Shell Validator', () => {
   describe('parseCommand', () => {
     it('parses simple commands', () => {
-      const result = parseCommand('ls -la');
+      const result = parse('ls -la');
       assert.strictEqual(result.safe, true);
-      assert.strictEqual(result.segments[0].binary, 'ls');
-      assert.deepStrictEqual(result.segments[0].args, ['-la']);
+      assert.strictEqual(result.segments![0]!.binary, 'ls');
+      assert.deepStrictEqual(result.segments![0]!.args, ['-la']);
     });
 
     it('detects command substitution with $()', () => {
-      const result = parseCommand('echo $(whoami)');
+      const result = parse('echo $(whoami)');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('Command substitution'));
+      assert.ok(result.reason!.includes('Command substitution'));
     });
 
     it('detects command substitution with backticks', () => {
-      const result = parseCommand('echo `whoami`');
+      const result = parse('echo `whoami`');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('Command substitution'));
+      assert.ok(result.reason!.includes('Command substitution'));
     });
 
     it('rejects pipe operators', () => {
-      const result = parseCommand('cat file.txt | grep pattern');
+      const result = parse('cat file.txt | grep pattern');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('operator'));
+      assert.ok(result.reason!.includes('operator'));
     });
 
     it('rejects chain operators', () => {
-      const result = parseCommand('mkdir test && cd test');
+      const result = parse('mkdir test && cd test');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('operator'));
+      assert.ok(result.reason!.includes('operator'));
     });
 
     it('rejects redirections', () => {
-      const result = parseCommand('echo malicious > /etc/passwd');
+      const result = parse('echo malicious > /etc/passwd');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('Redirection'));
+      assert.ok(result.reason!.includes('Redirection'));
     });
 
     it('rejects normal redirections too', () => {
-      const result = parseCommand('echo test > output.txt');
+      const result = parse('echo test > output.txt');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('Redirection'));
+      assert.ok(result.reason!.includes('Redirection'));
     });
 
     it('handles quoted strings', () => {
-      const result = parseCommand('echo "hello world"');
+      const result = parse('echo "hello world"');
       assert.strictEqual(result.safe, true);
-      assert.strictEqual(result.segments[0].binary, 'echo');
+      assert.strictEqual(result.segments![0]!.binary, 'echo');
     });
 
     it('handles empty command', () => {
-      const result = parseCommand('');
+      const result = parse('');
       assert.strictEqual(result.safe, false);
     });
 
     it('rejects background execution', () => {
-      const result = parseCommand('sleep 10 &');
+      const result = parse('sleep 10 &');
       assert.strictEqual(result.safe, false);
-      assert.ok(result.reason.includes('Background'));
+      assert.ok(result.reason!.includes('Background'));
     });
 
     it('allows metacharacters inside quotes', () => {
-      const result = parseCommand('echo "a|b && c; d > e"');
+      const result = parse('echo "a|b && c; d > e"');
       assert.strictEqual(result.safe, true);
-      assert.strictEqual(result.segments[0].binary, 'echo');
+      assert.strictEqual(result.segments![0]!.binary, 'echo');
     });
   });
 });

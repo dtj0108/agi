@@ -196,13 +196,13 @@ class Telemetry {
 }
 
 class NoopTelemetry {
-  recordEvent() {}
-  recordError() {}
-  incrementCounter() {}
-  observeDuration() {}
-  getRecentErrors() { return []; }
-  getRecentMetrics() { return []; }
-  snapshotHealth() {
+  recordEvent(_type?: any, _data?: any) {}
+  recordError(_component?: any, _error?: any, _context?: any) {}
+  incrementCounter(_name?: any, _value?: any, _labels?: any) {}
+  observeDuration(_name?: any, _durationMs?: any, _labels?: any) {}
+  getRecentErrors(_limit?: any) { return []; }
+  getRecentMetrics(_windowMinutes?: any) { return []; }
+  snapshotHealth(_windowMinutes?: any) {
     return {
       llmSchemaFallbackRate1h: 0,
       cycleFailureRate1h: 0,
@@ -213,13 +213,12 @@ class NoopTelemetry {
   flush() {}
 }
 
-let telemetryInstance = new NoopTelemetry();
+let telemetryInstance: Telemetry | NoopTelemetry = new NoopTelemetry();
 
 export function configureTelemetry(options: any = {}) {
   if (options.enabled === false) {
     telemetryInstance = new NoopTelemetry();
   } else {
-    // @ts-expect-error TODO(ts-migration): TS(2322): Type 'Telemetry' is not assignable to type 'NoopTe... Remove this comment to see the full error message
     telemetryInstance = new Telemetry(options);
   }
   return telemetryInstance;

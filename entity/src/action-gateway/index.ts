@@ -43,26 +43,20 @@ export class ActionGateway extends EventEmitter {
   async executeAction(action: any) {
     const startTime = Date.now();
     const telemetry = getTelemetry();
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
     telemetry.incrementCounter('action.total', 1, { tool: action.tool || 'unknown' });
 
     // Step 1: Validate shell commands
     if (action.tool === 'shell') {
       const validation = parseCommand(action.params?.command);
       if (!validation.safe) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.incrementCounter('action.rejected', 1, { reason: 'validator', tool: action.tool });
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('action_rejected', {
           tool: action.tool,
-          // @ts-expect-error TODO(ts-migration): TS(2339): Property 'reason' does not exist on type '{ safe: ... Remove this comment to see the full error message
           reason: validation.reason,
         });
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'reason' does not exist on type '{ safe: ... Remove this comment to see the full error message
         this.logger.logRejection(action, validation.reason);
         return {
           success: false,
-          // @ts-expect-error TODO(ts-migration): TS(2339): Property 'reason' does not exist on type '{ safe: ... Remove this comment to see the full error message
           error: validation.reason,
           approved_by: 'blocked',
         };
@@ -71,9 +65,7 @@ export class ActionGateway extends EventEmitter {
 
     // Step 2: Check blocklist
     if (isBlocked(action, this.blockedPatterns)) {
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
       telemetry.incrementCounter('action.rejected', 1, { reason: 'policy', tool: action.tool });
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
       telemetry.recordEvent('action_rejected', {
         tool: action.tool,
         reason: 'Action blocked by security policy',
@@ -110,7 +102,6 @@ export class ActionGateway extends EventEmitter {
 
     if (requiresApproval) {
       const actionId = `action-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
       telemetry.incrementCounter('action.approval_required', 1, { tool: action.tool });
       this.logger.logApprovalRequest(actionId, action);
 
@@ -119,9 +110,7 @@ export class ActionGateway extends EventEmitter {
         approved_by = 'user';
         this.logger.logApprovalDecision(actionId, true);
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.incrementCounter('action.rejected', 1, { reason: 'approval_denied', tool: action.tool });
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('action_rejected', {
           tool: action.tool,
           reason: err.message || 'Approval denied',
@@ -136,7 +125,6 @@ export class ActionGateway extends EventEmitter {
       }
     } else if (tier >= 3) {
       approved_by = 'policy';
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
       telemetry.recordEvent('action_auto_approved_by_policy', {
         tool: action.tool,
         tier,
@@ -173,7 +161,6 @@ export class ActionGateway extends EventEmitter {
           throw new Error(`Unknown tool: ${action.tool}`);
       }
     } catch (err: any) {
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
       telemetry.recordError('action-gateway', err, {
         stage: 'execute',
         tool: action.tool,
@@ -186,13 +173,11 @@ export class ActionGateway extends EventEmitter {
 
     result.duration_ms = Date.now() - startTime;
     result.approved_by = approved_by;
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
     telemetry.observeDuration('action.duration_ms', result.duration_ms, {
       tool: action.tool || 'unknown',
       tier: String(tier),
       success: String(result.success !== false),
     });
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
     telemetry.incrementCounter(result.success !== false ? 'action.success' : 'action.failed', 1, {
       tool: action.tool || 'unknown',
       tier: String(tier),

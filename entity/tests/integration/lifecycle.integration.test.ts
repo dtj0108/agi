@@ -38,7 +38,7 @@ describe('Lifecycle integration', () => {
     assert.strictEqual(authorizedStatus.response.status, 200);
 
     const unauthorizedWs = new WebSocket(harness.wsUrl);
-    const unauthorizedClose = await new Promise((resolveClose: any, rejectClose: any) => {
+    const unauthorizedClose = await new Promise<{ code: number; reason: string }>((resolveClose, rejectClose) => {
       const timeout = setTimeout(() => rejectClose(new Error('Unauthorized WS close timeout')), 5000);
       unauthorizedWs.once('close', (code: any, reason: any) => {
         clearTimeout(timeout);

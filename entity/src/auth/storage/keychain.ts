@@ -5,8 +5,9 @@
  */
 
 import { execFileSync, spawnSync } from 'child_process';
+import type { StdioOptions } from 'child_process';
 
-const QUIET_STDIO = ['ignore', 'pipe', 'ignore'];
+const QUIET_STDIO: StdioOptions = ['ignore', 'pipe', 'ignore'];
 
 function commandExists(command: any) {
   const result = spawnSync('which', [command], { stdio: 'ignore' });
@@ -43,7 +44,6 @@ export class KeychainAuthStorage {
         const value = execFileSync(
           'security',
           ['find-generic-password', '-a', this.account, '-s', this.service, '-w'],
-          // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
           { encoding: 'utf-8', stdio: QUIET_STDIO }
         ).trim();
         if (!value) return null;
@@ -54,7 +54,6 @@ export class KeychainAuthStorage {
         const value = execFileSync(
           'secret-tool',
           ['lookup', 'service', this.service, 'account', this.account],
-          // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
           { encoding: 'utf-8', stdio: QUIET_STDIO }
         ).trim();
         if (!value) return null;
@@ -78,7 +77,6 @@ export class KeychainAuthStorage {
       execFileSync(
         'security',
         ['add-generic-password', '-U', '-a', this.account, '-s', this.service, '-w', serialized],
-        // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
         { encoding: 'utf-8', stdio: QUIET_STDIO }
       );
       return;
@@ -96,7 +94,6 @@ export class KeychainAuthStorage {
           'account',
           this.account,
         ],
-        // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
         { input: serialized, encoding: 'utf-8', stdio: QUIET_STDIO }
       );
       return;
@@ -113,7 +110,6 @@ export class KeychainAuthStorage {
         execFileSync(
           'security',
           ['delete-generic-password', '-a', this.account, '-s', this.service],
-          // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
           { encoding: 'utf-8', stdio: QUIET_STDIO }
         );
         return;
@@ -123,7 +119,6 @@ export class KeychainAuthStorage {
         execFileSync(
           'secret-tool',
           ['clear', 'service', this.service, 'account', this.account],
-          // @ts-expect-error TODO(ts-migration): TS(2769): No overload matches this call.
           { encoding: 'utf-8', stdio: QUIET_STDIO }
         );
       }

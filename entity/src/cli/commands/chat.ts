@@ -57,9 +57,8 @@ export default async function chat(args: any, projectRoot: any) {
     console.log(`${entityName} is not running. Starting in foreground mode...`);
     console.log('(Use "entity start" to run as daemon, then "entity chat" to connect)\n');
 
-    // Run directly
-    // @ts-expect-error TODO(ts-migration): TS(2339): Property 'main' does not exist on type 'typeof imp... Remove this comment to see the full error message
-    const { main } = await import('../../index.js');
+    // Run directly (importing the module boots the daemon)
+    await import('../../index.js');
     return;
   }
 

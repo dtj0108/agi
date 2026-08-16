@@ -23,10 +23,22 @@ const BLOCKED_REDIRECT_PATHS = [
   '/private/etc',
 ];
 
+export interface ParsedCommand {
+  safe: boolean;
+  reason?: string | null;
+  segments?: any[];
+  hasBackgroundExec?: boolean;
+  hasRedirection?: boolean;
+  redirectionTargets?: any[];
+  binary?: string | null;
+  args?: string[];
+  original?: string;
+}
+
 /**
  * Parse and validate a shell command
  */
-export function parseCommand(commandString: any) {
+export function parseCommand(commandString: any): ParsedCommand {
   const result = {
     safe: true,
     reason: null,
@@ -240,7 +252,7 @@ function splitOnChains(cmd: any) {
 /**
  * Parse a single command segment
  */
-function parseSegment(segment: any) {
+function parseSegment(segment: any): ParsedCommand {
   // Remove leading redirections and environment variables
   let cleanSegment = segment
     .replace(/^\s*[A-Z_][A-Z_0-9]*=\S+\s+/gi, '') // Remove VAR=value prefix

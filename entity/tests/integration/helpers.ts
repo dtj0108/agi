@@ -8,15 +8,15 @@ import { CognitiveEngine } from '../../src/cognitive-engine/index.js';
 import { InterfaceLayer } from '../../src/interface/index.js';
 import { configureTelemetry } from '../../src/observability/telemetry.js';
 
-export async function getFreePort() {
-  return new Promise((resolvePort: any, reject: any) => {
+export async function getFreePort(): Promise<number> {
+  return new Promise<number>((resolvePort, reject) => {
     const server = createServer();
     server.listen(0, '127.0.0.1', () => {
       const address = server.address();
       const port = typeof address === 'object' && address ? address.port : null;
       server.close((error: any) => {
         if (error) return reject(error);
-        resolvePort(port);
+        resolvePort(port as number);
       });
     });
     server.on('error', reject);
@@ -84,17 +84,17 @@ export async function createMindFixture(rootDir: any) {
 
 function resolveMindPath(mindPath: any, relativePath: any) {
   if (typeof relativePath !== 'string' || relativePath.trim().length === 0) {
-    const error = new Error('Invalid path');
+    const error: Error & { code?: string } = new Error('Invalid path');
     error.code = 'INVALID_PATH';
     throw error;
   }
   if (relativePath.includes('\0')) {
-    const error = new Error('Invalid path');
+    const error: Error & { code?: string } = new Error('Invalid path');
     error.code = 'INVALID_PATH';
     throw error;
   }
   if (isAbsolute(relativePath)) {
-    const error = new Error('Invalid path');
+    const error: Error & { code?: string } = new Error('Invalid path');
     error.code = 'INVALID_PATH';
     throw error;
   }
@@ -102,7 +102,7 @@ function resolveMindPath(mindPath: any, relativePath: any) {
   const root = resolve(mindPath);
   const fullPath = resolve(root, relativePath);
   if (fullPath !== root && !fullPath.startsWith(`${root}${sep}`)) {
-    const error = new Error('Invalid path');
+    const error: Error & { code?: string } = new Error('Invalid path');
     error.code = 'INVALID_PATH';
     throw error;
   }
@@ -407,7 +407,7 @@ export async function startInProcessEntity(options: any = {}) {
 }
 
 export async function postJson(baseUrl: any, path: any, body: any, apiKey: any = null) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (apiKey) {
     headers.Authorization = `Bearer ${apiKey}`;
   }

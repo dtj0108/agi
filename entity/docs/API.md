@@ -695,7 +695,6 @@ npm run build
 node dist/cli/index.js <command>
 ```
 
-Compatibility (release N only): `node src/cli/index.js <command>` still works with a deprecation warning.
 
 ### Commands
 

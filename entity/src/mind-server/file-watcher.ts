@@ -135,11 +135,10 @@ export class FileWatcher extends EventEmitter {
    */
   getWatchedPaths() {
     if (!this.watcher) return [];
-    const watched = this.watcher.getWatched();
+    const watched: Record<string, string[]> = this.watcher.getWatched();
     const paths: any[] = [];
 
     for (const [dir, files] of Object.entries(watched)) {
-      // @ts-expect-error TODO(ts-migration): TS(2495): Type 'unknown' is not an array type or a string ty... Remove this comment to see the full error message
       for (const file of files) {
         paths.push(`${dir}/${file}`);
       }

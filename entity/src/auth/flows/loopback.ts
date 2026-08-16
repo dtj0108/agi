@@ -93,7 +93,7 @@ export async function runLoopbackLogin({
 
   let resolver: any;
   let rejecter: any;
-  const done = new Promise((resolve: any, reject: any) => {
+  const done = new Promise<{ code: string }>((resolve: any, reject: any) => {
     resolver = resolve;
     rejecter = reject;
   });
@@ -170,7 +170,6 @@ export async function runLoopbackLogin({
   }, timeoutMs);
 
   try {
-    // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type '{}'.
     const { code } = await done;
     const tokens = await provider.exchangeAuthorizationCode({
       metadata,

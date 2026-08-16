@@ -216,9 +216,8 @@ export class EmbeddingService {
 
     if (status === 429) {
       const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
-      const error = new Error(`Rate limited. Retry after ${retryAfter}s`);
+      const error: any = new Error(`Rate limited. Retry after ${retryAfter}s`);
       error.name = 'RateLimitError';
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'retryAfter' does not exist on type 'Erro... Remove this comment to see the full error message
       error.retryAfter = retryAfter;
       throw error;
     }
@@ -229,9 +228,8 @@ export class EmbeddingService {
       throw error;
     }
 
-    const error = new Error(`Embedding API error: ${status} - ${body}`);
+    const error: any = new Error(`Embedding API error: ${status} - ${body}`);
     error.name = 'EmbeddingError';
-    // @ts-expect-error TODO(ts-migration): TS(2339): Property 'status' does not exist on type 'Error'.
     error.status = status;
     throw error;
   }

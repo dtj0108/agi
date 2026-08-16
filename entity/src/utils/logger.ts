@@ -66,7 +66,7 @@ class Logger {
   /**
    * Format a log message
    */
-  format(level: keyof typeof levelConfig, message: any, data: any) {
+  format(level: keyof typeof levelConfig, message: any, data?: any) {
     const config = levelConfig[level];
     const parts: any[] = [];
 
@@ -101,7 +101,7 @@ class Logger {
   /**
    * Core log method
    */
-  log(level: keyof typeof levelConfig, message: any, data: any) {
+  log(level: keyof typeof levelConfig, message: any, data?: any) {
     const config = levelConfig[level];
     const currentPriority = levelConfig[this.level]?.priority ?? 1;
 
@@ -130,10 +130,10 @@ class Logger {
     }
   }
 
-  debug(message: any, data: any) { this.log('debug', message, data); }
-  info(message: any, data: any) { this.log('info', message, data); }
-  warn(message: any, data: any) { this.log('warn', message, data); }
-  error(message: any, data: any) { this.log('error', message, data); }
+  debug(message: any, data?: any) { this.log('debug', message, data); }
+  info(message: any, data?: any) { this.log('info', message, data); }
+  warn(message: any, data?: any) { this.log('warn', message, data); }
+  error(message: any, data?: any) { this.log('error', message, data); }
 }
 
 // Default logger instance (will be configured on startup)

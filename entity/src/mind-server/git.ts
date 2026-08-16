@@ -71,14 +71,13 @@ export class GitManager {
     this.pendingFiles.clear();
     this.commitTimer = null;
 
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     return this.commit(files);
   }
 
   /**
    * Commit specific files
    */
-  async commit(files: any, message: any) {
+  async commit(files: any, message?: any) {
     if (!files || files.length === 0) return null;
 
     try {

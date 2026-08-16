@@ -34,14 +34,12 @@ export class WebSocketInterface extends EventEmitter {
 
     this.wss.on('connection', (ws: any, request: any) => {
       if (!this.isAuthorized(request)) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.incrementCounter('ws.auth.rejected', 1);
         ws.close(1008, 'Unauthorized');
         return;
       }
 
       this.clients.add(ws);
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
       telemetry.incrementCounter('ws.connected', 1);
       console.log(`[WS] Client connected. Total: ${this.clients.size}`);
 
@@ -54,11 +52,9 @@ export class WebSocketInterface extends EventEmitter {
       ws.on('message', async (data: any) => {
         try {
           const message = JSON.parse(data.toString());
-          // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
           telemetry.incrementCounter('ws.message.received', 1, { type: message.type || 'unknown' });
           await this.handleMessage(ws, message);
         } catch (err: any) {
-          // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
           telemetry.recordError('ws', err, { stage: 'message_parse_or_handle' });
           this.sendToClient(ws, {
             type: 'error',
@@ -69,13 +65,11 @@ export class WebSocketInterface extends EventEmitter {
 
       ws.on('close', () => {
         this.clients.delete(ws);
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.incrementCounter('ws.disconnected', 1);
         console.log(`[WS] Client disconnected. Total: ${this.clients.size}`);
       });
 
       ws.on('error', (err: any) => {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('ws', err, { stage: 'client_error' });
         console.error('[WS] Client error:', err.message);
         this.clients.delete(ws);
@@ -135,7 +129,6 @@ export class WebSocketInterface extends EventEmitter {
       });
     });
 
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
     telemetry.recordEvent('ws_started', { host, port });
     console.log(`[WS] Server listening on ws://${host}:${port}`);
   }
@@ -214,7 +207,6 @@ export class WebSocketInterface extends EventEmitter {
     const telemetry = getTelemetry();
     if (ws.readyState === ws.OPEN) {
       ws.send(JSON.stringify(message));
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
       telemetry.incrementCounter('ws.message.sent', 1, { type: message.type || 'unknown' });
     }
   }
@@ -232,7 +224,6 @@ export class WebSocketInterface extends EventEmitter {
             client.subscriptions.includes('all') ||
             client.subscriptions.includes(message.type)) {
           client.send(data);
-          // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
           telemetry.incrementCounter('ws.message.broadcast', 1, { type: message.type || 'unknown' });
         }
       }
@@ -312,7 +303,6 @@ export class WebSocketInterface extends EventEmitter {
       }
       this.wss.close();
       this.wss = null;
-      // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
       telemetry.recordEvent('ws_stopped');
     }
   }

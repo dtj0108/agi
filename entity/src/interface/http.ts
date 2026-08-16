@@ -52,13 +52,11 @@ export class HttpServer extends EventEmitter {
       const start = Date.now();
       res.on('finish', () => {
         const durationMs = Date.now() - start;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.observeDuration('http.request.duration_ms', durationMs, {
           method: req.method,
           path: req.path,
           statusCode: String(res.statusCode),
         });
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.incrementCounter('http.request.total', 1, {
           method: req.method,
           path: req.path,
@@ -143,7 +141,6 @@ export class HttpServer extends EventEmitter {
           cycleId: result.cycleId,
         });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/message' });
         res.status(500).json({ error: err.message });
       }
@@ -166,7 +163,6 @@ export class HttpServer extends EventEmitter {
           auth,
         });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/status' });
         res.status(500).json({ error: err.message });
       }
@@ -178,7 +174,6 @@ export class HttpServer extends EventEmitter {
         const auth = await this.authManager.getAuthStatus();
         res.json(auth);
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/auth/status' });
         res.status(500).json({ error: err.message });
       }
@@ -188,11 +183,9 @@ export class HttpServer extends EventEmitter {
     this.app.get('/diagnostics/errors', async (req: any, res: any) => {
       try {
         const limit = Math.max(1, Math.min(500, parseInt(req.query.limit, 10) || 50));
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         const errors = telemetry.getRecentErrors(limit);
         res.json({ errors, count: errors.length });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/diagnostics/errors' });
         res.status(500).json({ error: err.message });
       }
@@ -202,11 +195,9 @@ export class HttpServer extends EventEmitter {
     this.app.get('/diagnostics/metrics', async (req: any, res: any) => {
       try {
         const windowMinutes = Math.max(1, Math.min(1440, parseInt(req.query.window, 10) || 60));
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         const metrics = telemetry.getRecentMetrics(windowMinutes);
         res.json({ windowMinutes, metrics, count: metrics.length });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/diagnostics/metrics' });
         res.status(500).json({ error: err.message });
       }
@@ -219,7 +210,6 @@ export class HttpServer extends EventEmitter {
         const content = await this.mindServer.readFile(relativePath);
         res.json({ path: relativePath, content });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/mind/*' });
         const mapped = this.mapMindReadError(err);
         res.status(mapped.status).json({ error: mapped.error });
@@ -273,7 +263,6 @@ export class HttpServer extends EventEmitter {
         const status = this.autonomy.setMode('go', { source: 'http' });
         res.json({ success: true, autonomy: status });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/go' });
         res.status(500).json({ error: err.message });
       }
@@ -288,7 +277,6 @@ export class HttpServer extends EventEmitter {
         const status = this.autonomy.setMode('manual', { source: 'http' });
         res.json({ success: true, autonomy: status });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/stop' });
         res.status(500).json({ error: err.message });
       }
@@ -306,7 +294,6 @@ export class HttpServer extends EventEmitter {
         await this.mindServer.rollback(commitHash);
         res.json({ success: true, rolledBackTo: commitHash });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/rollback' });
         res.status(500).json({ error: err.message });
       }
@@ -319,7 +306,6 @@ export class HttpServer extends EventEmitter {
         const history = await this.actionGateway.getHistory(limit);
         res.json({ history });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/history' });
         res.status(500).json({ error: err.message });
       }
@@ -331,7 +317,6 @@ export class HttpServer extends EventEmitter {
         const pending = this.actionGateway.getPendingApprovals?.() || [];
         res.json({ pending });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/approvals' });
         res.status(500).json({ error: err.message });
       }
@@ -474,7 +459,6 @@ export class HttpServer extends EventEmitter {
         this.emit('configUpdated', this.config);
         res.json({ success: true });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/config' });
         res.status(500).json({ error: err.message });
       }
@@ -486,7 +470,6 @@ export class HttpServer extends EventEmitter {
         const tree = (await this.mindServer.getTree?.()) || {};
         res.json(tree);
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/mind' });
         res.status(500).json({ error: err.message });
       }
@@ -504,7 +487,6 @@ export class HttpServer extends EventEmitter {
         });
         res.json({ success: true, cycleId: result.cycleId });
       } catch (err: any) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('http', err, { route: '/cycle' });
         res.status(500).json({ error: err.message });
       }

@@ -8,9 +8,30 @@ import assert from 'node:assert';
 import { spawn } from 'child_process';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
-import { join } from 'path';
-import { startMockLlmServer } from '../../scripts/test/mock-llm-server.js';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 import { canBindLoopback, createMindFixture, getFreePort, openWsClient, postJson } from './helpers.js';
+
+// The mock LLM server lives under scripts/, outside the tests TS project.
+// Load it through a non-literal dynamic import so the compiler does not pull
+// it into this program, and type its surface locally.
+type MockLlmServer = {
+  baseUrl: string;
+  port: number;
+  stop: () => Promise<void>;
+};
+type MockLlmModule = {
+  startMockLlmServer: (options: {
+    host: string;
+    port: number;
+    behavior: { needsAction: boolean };
+  }) => Promise<MockLlmServer>;
+};
+const mockLlmModuleSpecifier = '../../scripts/test/mock-llm-server.js';
+
+type ProcessExit = { code: number | null; signal: string | null };
 
 async function waitForHttpHealth(baseUrl: any, timeoutMs: any = 30000) {
   const start = Date.now();
@@ -26,8 +47,8 @@ async function waitForHttpHealth(baseUrl: any, timeoutMs: any = 30000) {
   return false;
 }
 
-async function waitForProcessExit(child: any, timeoutMs: any = 15000) {
-  return new Promise((resolveExit: any) => {
+async function waitForProcessExit(child: any, timeoutMs: any = 15000): Promise<ProcessExit> {
+  return new Promise<ProcessExit>((resolveExit) => {
     const timeout = setTimeout(() => resolveExit({ code: null, signal: 'TIMEOUT' }), timeoutMs);
     child.once('exit', (code: any, signal: any) => {
       clearTimeout(timeout);
@@ -52,6 +73,7 @@ describe('Daemon smoke (net-gated)', () => {
     const httpPort = await getFreePort();
     const wsPort = await getFreePort();
     const mockPort = await getFreePort();
+    const { startMockLlmServer } = (await import(mockLlmModuleSpecifier)) as MockLlmModule;
     const mockServer = await startMockLlmServer({
       host: '127.0.0.1',
       port: mockPort,
@@ -60,8 +82,8 @@ describe('Daemon smoke (net-gated)', () => {
 
     let stdout = '';
     let stderr = '';
-    const daemon = spawn(process.execPath, ['src/index.js'], {
-      cwd: '/Users/drewbaskin/agi/entity',
+    const daemon = spawn(process.execPath, ['dist/index.js'], {
+      cwd: repoRoot,
       env: {
         ...process.env,
         ENTITY_DAEMON: '1',

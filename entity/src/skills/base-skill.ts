@@ -50,37 +50,29 @@ export class BaseSkill {
       throw new Error(`Unknown action: ${action}`);
     }
 
-    const paramSchema = actionDef.params || {};
+    const paramSchema: Record<string, any> = actionDef.params || {};
 
     // Check required params
     for (const [name, schema] of Object.entries(paramSchema)) {
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'required' does not exist on type 'unknow... Remove this comment to see the full error message
       if (schema.required && !(name in params)) {
         throw new Error(`Missing required param: ${name}`);
       }
 
       // Type validation
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'type' does not exist on type 'unknown'.
       if (name in params && schema.type) {
         const value = params[name];
         const actualType = Array.isArray(value) ? 'array' : typeof value;
 
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'type' does not exist on type 'unknown'.
         if (schema.type === 'array' && !Array.isArray(value)) {
           throw new Error(`Param ${name} must be an array`);
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'type' does not exist on type 'unknown'.
         } else if (schema.type !== 'array' && actualType !== schema.type) {
-          // @ts-expect-error TODO(ts-migration): TS(2339): Property 'type' does not exist on type 'unknown'.
           throw new Error(`Param ${name} must be a ${schema.type}`);
         }
       }
 
       // Enum validation
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'enum' does not exist on type 'unknown'.
       if (name in params && schema.enum) {
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'enum' does not exist on type 'unknown'.
         if (!schema.enum.includes(params[name])) {
-          // @ts-expect-error TODO(ts-migration): TS(2339): Property 'enum' does not exist on type 'unknown'.
           throw new Error(`Param ${name} must be one of: ${schema.enum.join(', ')}`);
         }
       }
@@ -97,10 +89,9 @@ export class BaseSkill {
     if (!actionDef) return params;
 
     const result = { ...params };
-    const paramSchema = actionDef.params || {};
+    const paramSchema: Record<string, any> = actionDef.params || {};
 
     for (const [name, schema] of Object.entries(paramSchema)) {
-      // @ts-expect-error TODO(ts-migration): TS(2361): The right-hand side of an 'in' expression must not... Remove this comment to see the full error message
       if (!(name in result) && 'default' in schema) {
         result[name] = schema.default;
       }
@@ -112,7 +103,7 @@ export class BaseSkill {
   /**
    * Execute an action - override in subclass
    */
-  async execute(action: any, params: any) {
+  async execute(action: any, params: any): Promise<any> {
     throw new Error('Not implemented - subclass must override execute()');
   }
 

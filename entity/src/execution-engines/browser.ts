@@ -41,8 +41,7 @@ export class BrowserController {
     if (this.browser) return;
 
     this.browser = await puppeteer.launch({
-      // @ts-expect-error TODO(ts-migration): TS(2322): Type 'false | "new"' is not assignable to type 'bo... Remove this comment to see the full error message
-      headless: this.headless ? 'new' : false,
+      headless: Boolean(this.headless),
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

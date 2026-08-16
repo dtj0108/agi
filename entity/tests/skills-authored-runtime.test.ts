@@ -118,7 +118,7 @@ describe('Authored skill runtime', () => {
 
     const result = await author.generateSkill(createSkillAuthoredPayload('sandbox-ok'));
     assert.strictEqual(result.success, true);
-    assert.ok(result.code.includes('export default class'));
+    assert.ok(result.code!.includes('export default class'));
   });
 
   it('saveSkill writes base-skill and code hash metadata', async (t: any) => {

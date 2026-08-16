@@ -136,18 +136,15 @@ async function main() {
         break;
 
       case 'login':
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 1 arguments, but got 2.
-        await (await import('./commands/login.js')).default(args, PROJECT_ROOT);
+        await (await import('./commands/login.js')).default(args);
         break;
 
       case 'logout':
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
-        await (await import('./commands/logout.js')).default(args, PROJECT_ROOT);
+        await (await import('./commands/logout.js')).default();
         break;
 
       case 'auth-status':
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
-        await (await import('./commands/auth-status.js')).default(args, PROJECT_ROOT);
+        await (await import('./commands/auth-status.js')).default();
         break;
 
       default:

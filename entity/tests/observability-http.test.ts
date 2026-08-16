@@ -11,6 +11,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { HttpServer } from '../src/interface/http.js';
 import { configureTelemetry, getTelemetry } from '../src/observability/telemetry.js';
+import type { Telemetry } from '../src/observability/telemetry.js';
 
 async function requestJson(url: any, options: any = {}) {
   const response = await fetch(url, options);
@@ -56,7 +57,9 @@ describe('HTTP observability diagnostics', () => {
     };
 
     configureTelemetry(config.observability);
-    const telemetry = getTelemetry();
+    // getTelemetry() is declared as returning the no-op variant; with
+    // observability enabled it is a real Telemetry instance at runtime.
+    const telemetry = getTelemetry() as unknown as Telemetry;
     telemetry.incrementCounter('llm.schema.total', 10);
     telemetry.incrementCounter('llm.schema.fallback', 1);
     telemetry.incrementCounter('cycle.total', 20);

@@ -10,6 +10,11 @@ import { join } from 'path';
 import { classifyTier, isBlocked } from '../src/action-gateway/permissions.js';
 import { ActionGateway } from '../src/action-gateway/index.js';
 
+type ApprovalEvent = {
+  actionId: string;
+  action: { tool?: string; tier?: number } & Record<string, unknown>;
+};
+
 function createGatewayConfig(testName: any, autonomy: any = 'balanced') {
   const basePath = join(process.cwd(), 'entity-workspace', 'test-artifacts', testName);
   mkdirSync(basePath, { recursive: true });
@@ -157,7 +162,7 @@ describe('Action Gateway Permissions', () => {
         }
       );
 
-      const approvalEventPromise = new Promise((resolve: any) => {
+      const approvalEventPromise = new Promise<ApprovalEvent>((resolve) => {
         gateway.once('approval_required', resolve);
       });
 
@@ -173,7 +178,7 @@ describe('Action Gateway Permissions', () => {
 
       const pending = gateway.getPendingApprovals();
       assert.strictEqual(pending.length, 1);
-      assert.strictEqual(pending[0].id, approvalEvent.actionId);
+      assert.strictEqual(pending[0]!.id, approvalEvent.actionId);
 
       const approved = gateway.approve(approvalEvent.actionId);
       assert.strictEqual(approved, true);
@@ -199,7 +204,7 @@ describe('Action Gateway Permissions', () => {
         }
       );
 
-      const approvalEventPromise = new Promise((resolve: any) => {
+      const approvalEventPromise = new Promise<ApprovalEvent>((resolve) => {
         gateway.once('approval_required', resolve);
       });
 

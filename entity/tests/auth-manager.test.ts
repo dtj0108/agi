@@ -78,8 +78,14 @@ function createKeychainStorage({ available = true, saveThrows = false }: any = {
   };
 }
 
+type StoredCredentials = {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+} & Record<string, unknown>;
+
 function createMemoryFileStorage() {
-  let value = null;
+  let value: StoredCredentials | null = null;
   return {
     source: 'file',
     load: () => value,
@@ -137,8 +143,8 @@ describe('AuthManager', () => {
     const refreshed = await manager.refreshTokens({ force: true });
     assert.ok(refreshed);
     assert.strictEqual(refreshed.accessToken, 'oauth-access-refreshed');
-    assert.strictEqual(fileStorage.value.accessToken, 'oauth-access-refreshed');
-    assert.strictEqual(fileStorage.value.refreshToken, 'oauth-refresh-2');
+    assert.strictEqual(fileStorage.value?.accessToken, 'oauth-access-refreshed');
+    assert.strictEqual(fileStorage.value?.refreshToken, 'oauth-refresh-2');
   });
 
   it('keeps API key precedence in hybrid auto mode and falls back to oauth when missing', async () => {

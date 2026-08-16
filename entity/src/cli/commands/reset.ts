@@ -54,12 +54,11 @@ export default async function reset(args: any, projectRoot: any) {
     process.exit(0);
   }
 
-  const answer2 = await new Promise((resolve: any) => {
+  const answer2 = await new Promise<string>((resolve: any) => {
     rl.question('  Are you absolutely sure? (yes/no) ', resolve);
   });
   rl.close();
 
-  // @ts-expect-error TODO(ts-migration): TS(2339): Property 'toLowerCase' does not exist on type 'unk... Remove this comment to see the full error message
   if (answer2.toLowerCase() !== 'yes') {
     console.log('\n  Reset cancelled.\n');
     process.exit(0);

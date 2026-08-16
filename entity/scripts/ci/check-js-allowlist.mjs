@@ -5,7 +5,7 @@ import { extname, join, relative } from "path";
 
 const ROOT = process.cwd();
 const TARGET_DIRS = ["src", "scripts", "tests", "dashboard/src"];
-const ALLOWED_JS = new Set(["src/index.js", "src/cli/index.js"]);
+const ALLOWED_JS = new Set([]);
 const JS_EXTENSIONS = new Set([".js", ".jsx"]);
 
 function walk(dir, files = []) {

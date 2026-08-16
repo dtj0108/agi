@@ -34,10 +34,11 @@ const PROJECT_ROOT = join(__dirname, '..');
 // Parse command line arguments for non-interactive mode
 function parseArgs() {
   const args = process.argv.slice(2);
-  const parsed = { interactive: true };
+  const parsed: { interactive: boolean; [key: string]: string | boolean } = { interactive: true };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
+    if (arg === undefined) continue;
     if (arg === '--non-interactive') {
       parsed.interactive = false;
     } else if (arg.startsWith('--')) {
@@ -125,6 +126,7 @@ async function phase2MeetUser(args: any) {
     placeholder: 'Your full name',
     validate: (value: any) => {
       if (!value || value.trim().length === 0) return 'Name is required';
+      return undefined;
     },
   });
   if (p.isCancel(name)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -272,6 +274,7 @@ async function phase4LLMSetup(args: any) {
         message: 'Anthropic API key:',
         validate: (value: any) => {
           if (!value) return 'API key is required';
+          return undefined;
         },
       });
       if (p.isCancel(apiKey)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -324,6 +327,7 @@ async function phase4LLMSetup(args: any) {
           defaultValue: 'https://auth.openai.com',
           validate: (value: any) => {
             if (!value) return 'Issuer URL is required';
+            return undefined;
           },
         });
         if (p.isCancel(issuer)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -333,6 +337,7 @@ async function phase4LLMSetup(args: any) {
           placeholder: 'your-client-id',
           validate: (value: any) => {
             if (!value) return 'Client ID is required';
+            return undefined;
           },
         });
         if (p.isCancel(clientId)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -381,6 +386,7 @@ async function phase4LLMSetup(args: any) {
           message: 'OpenAI API key:',
           validate: (value: any) => {
             if (!value) return 'API key is required';
+            return undefined;
           },
         });
         if (p.isCancel(apiKey)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -402,6 +408,7 @@ async function phase4LLMSetup(args: any) {
         message: 'OpenRouter API key:',
         validate: (value: any) => {
           if (!value) return 'API key is required';
+          return undefined;
         },
       });
       if (p.isCancel(apiKey)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -454,6 +461,7 @@ async function phase4LLMSetup(args: any) {
         placeholder: 'https://your-api.example.com/v1',
         validate: (value: any) => {
           if (!value) return 'Base URL is required';
+          return undefined;
         },
       });
       if (p.isCancel(baseUrl)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -467,6 +475,7 @@ async function phase4LLMSetup(args: any) {
         message: 'Model name:',
         validate: (value: any) => {
           if (!value) return 'Model name is required';
+          return undefined;
         },
       });
       if (p.isCancel(model)) { p.cancel('Setup cancelled.'); process.exit(0); }
@@ -520,7 +529,7 @@ async function phase4LLMSetup(args: any) {
   return config;
 }
 
-function getDefaultModel(provider: any) {
+function getDefaultModel(provider: string) {
   const defaults = {
     anthropic: 'claude-sonnet-4-5-20250514',
     openai: 'gpt-4o',
@@ -528,10 +537,10 @@ function getDefaultModel(provider: any) {
     ollama: 'llama3.3:70b',
     custom: '',
   };
-  return defaults[provider] || '';
+  return defaults[provider as keyof typeof defaults] || '';
 }
 
-function buildLLMConfig(provider: any, options: any) {
+function buildLLMConfig(provider: string, options: any) {
   const configs = {
     anthropic: {
       api: 'anthropic-messages',
@@ -574,7 +583,7 @@ function buildLLMConfig(provider: any, options: any) {
       credentialSource: 'auto',
     },
   };
-  return configs[provider];
+  return configs[provider as keyof typeof configs];
 }
 
 async function testLLMConnection(config: any) {

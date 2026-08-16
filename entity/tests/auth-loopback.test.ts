@@ -65,7 +65,7 @@ describe('runLoopbackLogin', () => {
         const redirectUri = parsed.searchParams.get('redirect_uri');
         const state = parsed.searchParams.get('state');
         setTimeout(() => {
-          fetch(`${redirectUri}?code=auth-code&state=${encodeURIComponent(state)}`).catch(() => {});
+          fetch(`${redirectUri}?code=auth-code&state=${encodeURIComponent(String(state))}`).catch(() => {});
         }, 10);
       },
       timeoutMs: 5000,

@@ -256,18 +256,15 @@ ${actionMethods}
   /**
    * Generate mock parameters for testing
    */
-  generateMockParams(paramsSchema: any) {
+  generateMockParams(paramsSchema: Record<string, any>) {
     const params: Record<string, any> = {};
 
     for (const [name, schema] of Object.entries(paramsSchema)) {
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'default' does not exist on type 'unknown... Remove this comment to see the full error message
       if (schema.default !== undefined) {
-        // @ts-expect-error TODO(ts-migration): TS(2339): Property 'default' does not exist on type 'unknown... Remove this comment to see the full error message
         params[name] = schema.default;
         continue;
       }
 
-      // @ts-expect-error TODO(ts-migration): TS(2339): Property 'type' does not exist on type 'unknown'.
       switch (schema.type) {
         case 'string':
           params[name] = 'test';

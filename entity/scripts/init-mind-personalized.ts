@@ -82,16 +82,16 @@ function writeFile(filePath: any, content: any) {
   writeFileSync(filePath, content.trim() + '\n');
 }
 
-function getAutonomyDescription(autonomy: any) {
+function getAutonomyDescription(autonomy: string) {
   const descriptions = {
     conservative: 'I should ask before any non-read action',
     balanced: 'I can do reads and simple writes autonomously, but ask for anything more significant',
     full_trust: 'I can act autonomously for most things, only asking for dangerous or destructive actions',
   };
-  return descriptions[autonomy] || descriptions.balanced;
+  return descriptions[autonomy as keyof typeof descriptions] || descriptions.balanced;
 }
 
-function getVoiceContent(commStyle: any) {
+function getVoiceContent(commStyle: string) {
   const styles = {
     casual: `## Style
 - Talk like a sharp colleague, not a corporate bot
@@ -138,10 +138,10 @@ function getVoiceContent(commStyle: any) {
 - Forcing a particular style
 - Ignoring their preferences`,
   };
-  return styles[commStyle] || styles.casual;
+  return styles[commStyle as keyof typeof styles] || styles.casual;
 }
 
-function getHelpAreaGoals(helpAreas: any, callName: any, workingOn: any) {
+function getHelpAreaGoals(helpAreas: string[], callName: string, workingOn: string) {
   const goalTemplates = {
     coding: {
       title: 'Support Development Work',
@@ -183,8 +183,8 @@ function getHelpAreaGoals(helpAreas: any, callName: any, workingOn: any) {
   let goals = '';
   let goalNum = 3;
   for (const area of helpAreas) {
-    if (goalTemplates[area]) {
-      const goal = goalTemplates[area];
+    const goal = goalTemplates[area as keyof typeof goalTemplates];
+    if (goal) {
       goals += `\n## Goal ${goalNum}: ${goal.title}
 - Priority: MEDIUM
 - Type: Adaptive
@@ -455,7 +455,7 @@ async function createActionFiles(mindPath: any, entityProfile: any) {
 
 ## Shell
 - Status: Enabled
-- Autonomy: ${autonomyDescriptions[entityProfile.autonomy] || autonomyDescriptions.balanced}
+- Autonomy: ${autonomyDescriptions[entityProfile.autonomy as keyof typeof autonomyDescriptions] || autonomyDescriptions.balanced}
 - Rate limit: 60 commands/hour
 - Timeout: 30 seconds default
 - My confidence: 0.2 (never used)

@@ -585,7 +585,7 @@ I should update this file whenever I modify my own configuration.
 
   // === EMPTY PLACEHOLDER FILES ===
 
-  const placeholders = [
+  const placeholders: [string, string][] = [
     ['memory/episodic/.gitkeep', '# Episodic memories will be stored here'],
     ['memory/semantic/.gitkeep', '# Semantic knowledge will be stored here'],
     ['memory/emotional/.gitkeep', '# Emotional memories will be stored here'],

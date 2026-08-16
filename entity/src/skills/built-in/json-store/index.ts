@@ -47,8 +47,7 @@ export default class JsonStoreSkill extends BaseSkill {
     }
   }
 
-  // @ts-expect-error TODO(ts-migration): TS(2416): Property 'execute' in type 'JsonStoreSkill' is not... Remove this comment to see the full error message
-  async execute(action: any, params: any) {
+  override async execute(action: any, params: any) {
     switch (action) {
       case 'get':
         return this.get(params);

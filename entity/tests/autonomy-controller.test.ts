@@ -7,14 +7,12 @@ import assert from 'node:assert';
 import { AutonomyController } from '../src/interface/autonomy.js';
 
 class FakeHeartbeat {
-  constructor() {
-    this.enabled = true;
-    this.schedule = '*/30 * * * *';
-    this.prompt = 'heartbeat';
-    this.running = false;
-    this.startCount = 0;
-    this.stopCount = 0;
-  }
+  enabled = true;
+  schedule = '*/30 * * * *';
+  prompt = 'heartbeat';
+  running = false;
+  startCount = 0;
+  stopCount = 0;
 
   start() {
     this.running = true;
