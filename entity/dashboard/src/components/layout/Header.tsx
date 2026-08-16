@@ -1,8 +1,16 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Pause, Play, Compass, Square } from "lucide-react"
+import type { EntityStatus } from "@/lib/types"
 
-export function Header({ status, onRefresh, onTogglePause, onToggleGo }) {
+interface HeaderProps {
+  status: EntityStatus | null
+  onRefresh: () => void
+  onTogglePause: () => void
+  onToggleGo: () => void
+}
+
+export function Header({ status, onRefresh, onTogglePause, onToggleGo }: HeaderProps) {
   const isRunning = status?.state === "running"
   const isPaused = status?.state === "paused"
   const autonomyMode = status?.autonomy?.mode || "manual"

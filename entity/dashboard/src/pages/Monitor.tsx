@@ -13,6 +13,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Check, X, AlertTriangle, Clock, Terminal, Eye } from "lucide-react"
+import type { Approval, EntityAction, EntityStatus, Thought } from "@/lib/types"
+
+interface MonitorProps {
+  actions: EntityAction[]
+  approvals: Approval[]
+  onApprove: (id: string) => void
+  onDeny: (id: string) => void
+  thoughts: Thought[]
+  status: EntityStatus | null
+}
 
 export function Monitor({
   actions,
@@ -21,8 +31,8 @@ export function Monitor({
   onDeny,
   thoughts,
   status,
-}) {
-  const [selectedAction, setSelectedAction] = useState(null)
+}: MonitorProps) {
+  const [selectedAction, setSelectedAction] = useState<EntityAction | null>(null)
 
   return (
     <div className="space-y-6">
@@ -237,7 +247,7 @@ export function Monitor({
                   {selectedAction.command}
                 </pre>
               </div>
-              {selectedAction.result && (
+              {selectedAction.result ? (
                 <div>
                   <span className="text-sm font-medium">Result:</span>
                   <pre className="mt-1 p-2 bg-muted rounded text-sm font-mono overflow-auto max-h-40">
@@ -246,7 +256,7 @@ export function Monitor({
                       : JSON.stringify(selectedAction.result, null, 2)}
                   </pre>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
           <DialogFooter>
@@ -260,7 +270,12 @@ export function Monitor({
   )
 }
 
-function ActionList({ actions, onSelect }) {
+interface ActionListProps {
+  actions?: EntityAction[]
+  onSelect: (action: EntityAction) => void
+}
+
+function ActionList({ actions, onSelect }: ActionListProps) {
   if (!actions?.length) {
     return (
       <p className="text-sm text-muted-foreground py-4">No actions to display</p>
@@ -305,7 +320,7 @@ function ActionList({ actions, onSelect }) {
   )
 }
 
-function StatusIcon({ status }) {
+function StatusIcon({ status }: { status?: string }) {
   switch (status) {
     case "completed":
       return <Check className="h-4 w-4 text-green-500" />
@@ -328,7 +343,7 @@ const phases = [
   { id: "update", label: "Update" },
 ]
 
-function formatTime(timestamp) {
+function formatTime(timestamp?: number | string) {
   if (!timestamp) return ""
   return new Date(timestamp).toLocaleTimeString()
 }

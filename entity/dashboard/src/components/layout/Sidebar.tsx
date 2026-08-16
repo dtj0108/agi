@@ -22,7 +22,14 @@ const navItems = [
   { id: "chat", label: "Chat", icon: MessageSquare },
 ]
 
-export function Sidebar({ currentPage, onNavigate, theme, onToggleTheme }) {
+interface SidebarProps {
+  currentPage: string
+  onNavigate: (page: string) => void
+  theme: "dark" | "light"
+  onToggleTheme: () => void
+}
+
+export function Sidebar({ currentPage, onNavigate, theme, onToggleTheme }: SidebarProps) {
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background">
       {/* Logo/Title */}

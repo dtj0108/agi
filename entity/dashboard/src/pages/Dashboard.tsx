@@ -3,8 +3,16 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Activity, Brain, Clock, Zap } from "lucide-react"
+import type { EntityAction, EmotionState, EntityStatus, Thought } from "@/lib/types"
 
-export function Dashboard({ status, thoughts, actions, emotions }) {
+interface DashboardProps {
+  status: EntityStatus | null
+  thoughts: Thought[]
+  actions: EntityAction[]
+  emotions: EmotionState | null
+}
+
+export function Dashboard({ status, thoughts, actions, emotions }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* Status Cards */}
@@ -77,7 +85,7 @@ export function Dashboard({ status, thoughts, actions, emotions }) {
             <ScrollArea className="h-[300px]">
               {thoughts?.length > 0 ? (
                 <div className="space-y-4">
-                  {thoughts.slice(0, 10).map((thought, i) => (
+                  {thoughts.slice(0, 10).map((thought: Thought, i: number) => (
                     <div key={i} className="border-l-2 border-primary pl-4">
                       <p className="text-sm">{thought.content}</p>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -105,7 +113,7 @@ export function Dashboard({ status, thoughts, actions, emotions }) {
             <ScrollArea className="h-[300px]">
               {actions?.length > 0 ? (
                 <div className="space-y-3">
-                  {actions.slice(0, 10).map((action, i) => (
+                  {actions.slice(0, 10).map((action: EntityAction, i: number) => (
                     <div
                       key={i}
                       className="flex items-start justify-between border-b pb-2 last:border-0"
@@ -143,7 +151,7 @@ export function Dashboard({ status, thoughts, actions, emotions }) {
   )
 }
 
-function formatUptime(ms) {
+function formatUptime(ms?: number) {
   if (!ms) return "0s"
   const seconds = Math.floor(ms / 1000)
   const minutes = Math.floor(seconds / 60)
@@ -156,7 +164,7 @@ function formatUptime(ms) {
   return `${seconds}s`
 }
 
-function formatTime(timestamp) {
+function formatTime(timestamp?: number | string) {
   if (!timestamp) return ""
   return new Date(timestamp).toLocaleTimeString()
 }

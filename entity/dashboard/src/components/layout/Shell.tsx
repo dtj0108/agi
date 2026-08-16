@@ -1,5 +1,19 @@
+import type { ReactNode } from "react"
 import { Sidebar } from "./Sidebar"
 import { Header } from "./Header"
+import type { EntityStatus } from "@/lib/types"
+
+interface ShellProps {
+  children: ReactNode
+  currentPage: string
+  onNavigate: (page: string) => void
+  theme: "dark" | "light"
+  onToggleTheme: () => void
+  status: EntityStatus | null
+  onRefresh: () => void
+  onTogglePause: () => void
+  onToggleGo: () => void
+}
 
 export function Shell({
   children,
@@ -11,7 +25,7 @@ export function Shell({
   onRefresh,
   onTogglePause,
   onToggleGo,
-}) {
+}: ShellProps) {
   return (
     <div className={`flex h-screen ${theme === "dark" ? "dark" : ""}`}>
       <Sidebar

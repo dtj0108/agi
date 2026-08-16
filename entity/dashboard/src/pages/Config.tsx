@@ -12,11 +12,65 @@ import { Badge } from "@/components/ui/badge"
 import api from "@/lib/api"
 import { Save, RotateCcw } from "lucide-react"
 
+interface LlmConfig {
+  model?: string
+  maxTokens?: number
+  temperature?: number
+  promptCaching?: boolean
+  [key: string]: unknown
+}
+
+interface GoConfig {
+  minDelayMs?: number
+  maxConsecutiveErrors?: number
+  [key: string]: unknown
+}
+
+interface AutonomyConfig {
+  mode?: string
+  level?: string
+  go?: GoConfig
+  blockedPatterns?: string[]
+  [key: string]: unknown
+}
+
+interface ActionsConfig {
+  autonomy?: string
+  blockedPatterns?: string[]
+  [key: string]: unknown
+}
+
+interface HeartbeatConfig {
+  enabled?: boolean
+  schedule?: string
+  prompt?: string
+  [key: string]: unknown
+}
+
+interface InterfaceConfig {
+  httpPort?: number
+  wsPort?: number
+  [key: string]: unknown
+}
+
+interface EntityConfig {
+  llm?: LlmConfig
+  actions?: ActionsConfig
+  autonomy?: AutonomyConfig
+  heartbeat?: HeartbeatConfig
+  interface?: InterfaceConfig
+  [key: string]: unknown
+}
+
+type ConfigSection = "llm" | "actions" | "autonomy" | "heartbeat" | "interface"
+
+type ConfigFieldValue = string | number | boolean | string[]
+
 export function Config() {
-  const [config, setConfig] = useState(null)
+  const [config, setConfig] = useState<EntityConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
 
   useEffect(() => {
@@ -52,51 +106,58 @@ export function Config() {
       })
       setError(null)
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : "Unknown error")
     } finally {
       setLoading(false)
     }
   }
 
   async function saveConfig() {
+    if (!config) return
     try {
       setSaving(true)
       await api.updateConfig(buildSavePayload(config))
       setDirty(false)
       setError(null)
     } catch (err) {
-      setError(err.message)
+      setError(err instanceof Error ? err.message : "Unknown error")
     } finally {
       setSaving(false)
     }
   }
 
-  function updateField(section, field, value) {
-    setConfig((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }))
-    setDirty(true)
-  }
-
-  function updateAutonomyGoField(field, value) {
-    setConfig((prev) => ({
-      ...prev,
-      autonomy: {
-        ...prev.autonomy,
-        go: {
-          ...prev.autonomy?.go,
+  function updateField(section: ConfigSection, field: string, value: ConfigFieldValue) {
+    setConfig((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        [section]: {
+          ...prev[section],
           [field]: value,
         },
-      },
-    }))
+      }
+    })
     setDirty(true)
   }
 
-  function buildSavePayload(currentConfig) {
+  function updateAutonomyGoField(field: string, value: number) {
+    setConfig((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        autonomy: {
+          ...prev.autonomy,
+          go: {
+            ...prev.autonomy?.go,
+            [field]: value,
+          },
+        },
+      }
+    })
+    setDirty(true)
+  }
+
+  function buildSavePayload(currentConfig: EntityConfig) {
     return {
       llm: currentConfig.llm,
       heartbeat: currentConfig.heartbeat,
