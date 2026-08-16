@@ -66,7 +66,6 @@ export class InterfaceLayer {
             this.cli.start();
         }
         this.autonomy.start();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('interface_started', {
             httpPort: this.config.interface?.httpPort,
             wsPort: this.config.interface?.wsPort,
@@ -85,7 +84,6 @@ export class InterfaceLayer {
         this.ws.stop();
         this.cli.stop();
         this.autonomy.stop();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         telemetry.recordEvent('interface_stopped');
     }
     /**
@@ -96,7 +94,6 @@ export class InterfaceLayer {
         if (this.killRequested)
             return;
         this.killRequested = true;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         telemetry.recordEvent('interface_kill_requested');
         if (this.killCallback) {
             this.killCallback();
@@ -110,7 +107,6 @@ export class InterfaceLayer {
      */
     onPause() {
         this.autonomy.pause();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         getTelemetry().recordEvent('interface_paused');
     }
     /**
@@ -118,7 +114,6 @@ export class InterfaceLayer {
      */
     onResume() {
         this.autonomy.resume();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
         getTelemetry().recordEvent('interface_resumed');
     }
     /**

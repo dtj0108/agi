@@ -40,7 +40,6 @@ export class Heartbeat extends EventEmitter {
         // Validate cron schedule
         if (!cron.validate(this.schedule)) {
             console.error(`[Heartbeat] Invalid cron schedule: ${this.schedule}`);
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
             telemetry.recordEvent('heartbeat_invalid_schedule', { schedule: this.schedule });
             return;
         }
@@ -56,19 +55,15 @@ export class Heartbeat extends EventEmitter {
                     },
                 });
                 this.emit('cycle_complete', result);
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
                 telemetry.incrementCounter('heartbeat.cycle.success', 1);
             }
             catch (err) {
                 console.error('[Heartbeat] Cycle failed:', err.message);
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
                 telemetry.incrementCounter('heartbeat.cycle.failed', 1);
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
                 telemetry.recordError('heartbeat', err, { stage: 'trigger' });
                 this.emit('cycle_error', err);
             }
         });
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('heartbeat_started', { schedule: this.schedule });
         console.log(`[Heartbeat] Scheduled: ${this.schedule}`);
     }
@@ -80,7 +75,6 @@ export class Heartbeat extends EventEmitter {
         if (this.task) {
             this.task.stop();
             this.task = null;
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 1.
             telemetry.recordEvent('heartbeat_stopped');
         }
     }
@@ -99,7 +93,6 @@ export class Heartbeat extends EventEmitter {
             });
         }
         catch (error) {
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
             getTelemetry().recordError('heartbeat', error, { stage: 'manual_trigger' });
             throw error;
         }
@@ -178,7 +171,6 @@ export class Heartbeat extends EventEmitter {
         }
         catch {
             // No preferences file or parse error, use config defaults
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
             getTelemetry().recordEvent('heartbeat_preferences_unavailable', {
                 path: join(mindPath, 'self/preferences.md'),
             });

@@ -34,7 +34,7 @@ export declare class BaseSkill {
     /**
      * Execute an action - override in subclass
      */
-    execute(action: any, params: any): Promise<void>;
+    execute(action: any, params: any): Promise<any>;
     /**
      * Get skill metadata for display
      */

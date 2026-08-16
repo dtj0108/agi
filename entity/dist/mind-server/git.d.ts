@@ -31,7 +31,7 @@ export declare class GitManager {
     /**
      * Commit specific files
      */
-    commit(files: any, message: any): Promise<{
+    commit(files: any, message?: any): Promise<{
         hash: any;
         message: any;
         files: any;

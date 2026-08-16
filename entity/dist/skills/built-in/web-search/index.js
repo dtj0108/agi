@@ -5,7 +5,6 @@
  */
 import { BaseSkill } from '../../base-skill.js';
 export default class WebSearchSkill extends BaseSkill {
-    // @ts-expect-error TODO(ts-migration): TS(2416): Property 'execute' in type 'WebSearchSkill' is not... Remove this comment to see the full error message
     async execute(action, params) {
         switch (action) {
             case 'search':

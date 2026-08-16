@@ -5,7 +5,6 @@
  */
 import { BaseSkill } from '../../base-skill.js';
 export default class HttpRequestSkill extends BaseSkill {
-    // @ts-expect-error TODO(ts-migration): TS(2416): Property 'execute' in type 'HttpRequestSkill' is n... Remove this comment to see the full error message
     async execute(action, params) {
         switch (action) {
             case 'get':
@@ -160,7 +159,6 @@ export default class HttpRequestSkill extends BaseSkill {
             signal: controller.signal,
         };
         if (body && ['POST', 'PUT', 'PATCH'].includes(options.method)) {
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'body' does not exist on type '{ method: ... Remove this comment to see the full error message
             options.body = JSON.stringify(body);
             options.headers['Content-Type'] = options.headers['Content-Type'] || 'application/json';
         }

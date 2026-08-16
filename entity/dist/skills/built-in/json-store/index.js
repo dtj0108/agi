@@ -44,7 +44,6 @@ export default class JsonStoreSkill extends BaseSkill {
             throw new Error(`Failed to save store: ${err.message}`);
         }
     }
-    // @ts-expect-error TODO(ts-migration): TS(2416): Property 'execute' in type 'JsonStoreSkill' is not... Remove this comment to see the full error message
     async execute(action, params) {
         switch (action) {
             case 'get':

@@ -37,17 +37,13 @@ async function main() {
     console.log('[2/8] Verifying mind directory...');
     const mindPath = config.mind.path;
     if (!existsSync(mindPath)) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('main', new Error('Mind directory not found'), { mindPath });
         console.error(`\nError: Mind directory not found at ${mindPath}`);
         console.error('Run "npm run init-mind" to create the mind directory.\n');
         process.exit(1);
     }
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info(`Mind path: ${mindPath}`);
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info(`LLM: ${config.llm.api} / ${config.llm.model}`);
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
     telemetry.recordEvent('boot_started', {
         mindPath,
         llmApi: config.llm.api,
@@ -57,7 +53,6 @@ async function main() {
     console.log('[3/8] Starting Mind Server (file watcher + search + git)...');
     mindServer = new MindServer(config);
     await mindServer.start();
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info('Mind Server started');
     // Step 4: Initialize Execution Engines
     console.log('[4/8] Initializing Execution Engines...');
@@ -82,15 +77,12 @@ async function main() {
         skillsExecutor = new SkillsExecutor(skillsRegistry);
         const builtInCount = skillsRegistry.listBuiltIn().length;
         const authoredCount = skillsRegistry.listAuthored().length;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
         log.info(`Skills loaded: ${builtInCount} built-in, ${authoredCount} self-authored`);
         if (skillsRegistry.names().length > 0) {
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
             log.info(`Available skills: ${skillsRegistry.names().join(', ')}`);
         }
     }
     catch (err) {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
         log.warn(`Failed to load skills: ${err.message}`);
     }
     executionEngines = {
@@ -99,18 +91,15 @@ async function main() {
         files: new FileOperations(config),
         skills: skillsExecutor,
     };
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info('Execution Engines initialized');
     // Step 5: Start Action Gateway
     console.log('[5/8] Starting Action Gateway...');
     const actionGateway = new ActionGateway(config, executionEngines);
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info('Action Gateway started');
     // Step 6: Start Cognitive Engine
     console.log('[6/8] Starting Cognitive Engine...');
     cognitiveEngine = new CognitiveEngine(config, actionGateway, mindServer, skillsExecutor);
     await cognitiveEngine.initialize();
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info('Cognitive Engine started');
     // Step 7: Start Interface Layer
     console.log('[7/8] Starting Interface Layer (HTTP + WebSocket + CLI + Autonomy)...');
@@ -120,7 +109,6 @@ async function main() {
     // Load preferences from mind (overrides static config)
     await interfaceLayer.heartbeat.loadFromMind(config.mind.path);
     interfaceLayer.start();
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
     log.info('Interface Layer started');
     // Step 8: Initial orientation cycle
     console.log('[8/8] Running initial orientation cycle...\n');
@@ -134,7 +122,6 @@ async function main() {
     }
     catch (err) {
         log.error('Initial cycle failed', err.message);
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('main', err, { phase: 'initial_cycle' });
         initialState = {
             emotionalState: { primary: 'uncertain', intensity: 0.5 },
@@ -152,13 +139,11 @@ async function main() {
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('uncaughtException', async (err) => {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('process', err, { signal: 'uncaughtException' });
         console.error('[Fatal] Uncaught exception:', err);
         await shutdown('uncaughtException');
     });
     process.on('unhandledRejection', async (reason) => {
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('process', reason instanceof Error ? reason : new Error(String(reason)), {
             signal: 'unhandledRejection',
         });
@@ -176,7 +161,6 @@ async function shutdown(signal) {
     console.log(`\n[Shutdown] Received ${signal}. Graceful shutdown starting...`);
     try {
         const telemetry = getTelemetry();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('shutdown_started', { signal });
         // Step 1: Save current emotional state (happens in cognitive engine)
         console.log('[Shutdown] Saving state...');
@@ -207,7 +191,6 @@ async function shutdown(signal) {
         if (mindServer) {
             await mindServer.stop();
         }
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('shutdown_complete', { signal, success: true });
         telemetry.flush();
         console.log('[Shutdown] Complete. Goodbye.\n');
@@ -215,7 +198,6 @@ async function shutdown(signal) {
     }
     catch (err) {
         const telemetry = getTelemetry();
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
         telemetry.recordError('shutdown', err, { signal });
         telemetry.flush();
         console.error('[Shutdown] Error during shutdown:', err.message);
@@ -225,7 +207,6 @@ async function shutdown(signal) {
 // Run
 main().catch((err) => {
     const telemetry = getTelemetry();
-    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
     telemetry.recordError('main', err, { phase: 'boot' });
     telemetry.flush();
     console.error('Boot failed:', err);

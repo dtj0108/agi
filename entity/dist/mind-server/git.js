@@ -63,7 +63,6 @@ export class GitManager {
         const files = [...this.pendingFiles];
         this.pendingFiles.clear();
         this.commitTimer = null;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 2 arguments, but got 1.
         return this.commit(files);
     }
     /**

@@ -59,7 +59,6 @@ export class MindServer extends EventEmitter {
             this.emit('watcher:ready');
         });
         this.started = true;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('mind_server_started', { mindPath: this.mindPath });
         this.emit('ready');
     }
@@ -74,13 +73,11 @@ export class MindServer extends EventEmitter {
             this.emit('indexed', { path: event.relativePath, timestamp: event.timestamp });
             // Schedule git commit
             this.git.scheduleCommit(event.path);
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
             telemetry.incrementCounter('mind.file_added', 1);
             // Forward the event
             this.emit('file:added', event);
         }
         catch (error) {
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
             telemetry.recordError('mind-server', error, { stage: 'file_added', path: event.path });
             this.emit('error', { component: 'mind-server', error, context: { event } });
         }
@@ -96,13 +93,11 @@ export class MindServer extends EventEmitter {
             this.emit('indexed', { path: event.relativePath, timestamp: event.timestamp });
             // Schedule git commit
             this.git.scheduleCommit(event.path);
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
             telemetry.incrementCounter('mind.file_changed', 1);
             // Forward the event
             this.emit('file:changed', event);
         }
         catch (error) {
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
             telemetry.recordError('mind-server', error, { stage: 'file_changed', path: event.path });
             this.emit('error', { component: 'mind-server', error, context: { event } });
         }
@@ -117,7 +112,6 @@ export class MindServer extends EventEmitter {
         // Schedule git commit
         this.git.scheduleCommit(event.path);
         // Forward the event
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.incrementCounter('mind.file_removed', 1);
         this.emit('file:removed', event);
     }
@@ -128,7 +122,6 @@ export class MindServer extends EventEmitter {
         const telemetry = getTelemetry();
         const fullPath = this.resolveMindPath(relativePath);
         const content = await readFile(fullPath, 'utf-8');
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.incrementCounter('mind.read', 1);
         return content;
     }
@@ -138,19 +131,16 @@ export class MindServer extends EventEmitter {
     resolveMindPath(relativePath) {
         if (typeof relativePath !== 'string' || relativePath.trim().length === 0) {
             const error = new Error('Invalid path');
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type 'Error'.
             error.code = 'INVALID_PATH';
             throw error;
         }
         if (relativePath.includes('\0')) {
             const error = new Error('Invalid path');
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type 'Error'.
             error.code = 'INVALID_PATH';
             throw error;
         }
         if (isAbsolute(relativePath)) {
             const error = new Error('Absolute paths are not allowed');
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type 'Error'.
             error.code = 'INVALID_PATH';
             throw error;
         }
@@ -159,7 +149,6 @@ export class MindServer extends EventEmitter {
         const inMind = fullPath === mindRoot || fullPath.startsWith(`${mindRoot}${sep}`);
         if (!inMind) {
             const error = new Error('Path escapes mind directory');
-            // @ts-expect-error TODO(ts-migration): TS(2339): Property 'code' does not exist on type 'Error'.
             error.code = 'INVALID_PATH';
             throw error;
         }
@@ -223,7 +212,6 @@ export class MindServer extends EventEmitter {
         // Close search index
         this.search.close();
         this.started = false;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('mind_server_stopped', { mindPath: this.mindPath });
         this.emit('stopped');
     }

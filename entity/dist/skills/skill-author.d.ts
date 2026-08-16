@@ -92,7 +92,7 @@ export declare class SkillAuthor {
     /**
      * Generate mock parameters for testing
      */
-    generateMockParams(paramsSchema: any): Record<string, any>;
+    generateMockParams(paramsSchema: Record<string, any>): Record<string, any>;
     /**
      * Save an approved skill to mind
      */

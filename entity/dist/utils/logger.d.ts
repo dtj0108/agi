@@ -50,15 +50,15 @@ declare class Logger {
     /**
      * Format a log message
      */
-    format(level: keyof typeof levelConfig, message: any, data: any): string;
+    format(level: keyof typeof levelConfig, message: any, data?: any): string;
     /**
      * Core log method
      */
-    log(level: keyof typeof levelConfig, message: any, data: any): void;
-    debug(message: any, data: any): void;
-    info(message: any, data: any): void;
-    warn(message: any, data: any): void;
-    error(message: any, data: any): void;
+    log(level: keyof typeof levelConfig, message: any, data?: any): void;
+    debug(message: any, data?: any): void;
+    info(message: any, data?: any): void;
+    warn(message: any, data?: any): void;
+    error(message: any, data?: any): void;
 }
 export declare function configureLogger(options: any): Logger;
 export declare function getLogger(context: any): Logger;

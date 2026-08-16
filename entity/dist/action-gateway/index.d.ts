@@ -46,7 +46,7 @@ export declare class ActionGateway extends EventEmitter {
      * Get tier threshold at or above which approval is required.
      * Returns null when approvals are disabled by policy.
      */
-    getApprovalThreshold(level?: any): 3 | 2 | null;
+    getApprovalThreshold(level?: any): 2 | 3 | null;
     /**
      * Determine if a tier requires explicit approval under current policy.
      */

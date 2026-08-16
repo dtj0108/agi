@@ -106,7 +106,6 @@ export class AutonomyController extends EventEmitter {
         if (!this.paused) {
             this.startForMode(normalized);
         }
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('autonomy_mode_changed', {
             previousMode,
             mode: normalized,
@@ -132,7 +131,6 @@ export class AutonomyController extends EventEmitter {
         this.goConfig = nextConfig;
         this.config.autonomy.go.minDelayMs = nextConfig.minDelayMs;
         this.config.autonomy.go.maxConsecutiveErrors = nextConfig.maxConsecutiveErrors;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         getTelemetry().recordEvent('autonomy_go_config_updated', {
             minDelayMs: this.goConfig.minDelayMs,
             maxConsecutiveErrors: this.goConfig.maxConsecutiveErrors,
@@ -185,7 +183,6 @@ export class AutonomyController extends EventEmitter {
         this.goRunning = true;
         this.goStopRequested = false;
         this.consecutiveErrors = 0;
-        // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
         telemetry.recordEvent('autonomy_go_started', {
             minDelayMs: this.goConfig.minDelayMs,
             maxConsecutiveErrors: this.goConfig.maxConsecutiveErrors,
@@ -193,7 +190,6 @@ export class AutonomyController extends EventEmitter {
         this.goLoopPromise = this.runGoLoop().finally(() => {
             this.goRunning = false;
             this.goLoopPromise = null;
-            // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
             telemetry.recordEvent('autonomy_go_stopped', {
                 mode: this.mode,
                 paused: this.paused,
@@ -239,14 +235,11 @@ export class AutonomyController extends EventEmitter {
                     },
                 });
                 this.consecutiveErrors = 0;
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
                 telemetry.incrementCounter('autonomy_go_cycle_success', 1, { mode: this.mode });
             }
             catch (error) {
                 this.consecutiveErrors += 1;
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
                 telemetry.incrementCounter('autonomy_go_cycle_failed', 1, { mode: this.mode });
-                // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 3.
                 telemetry.recordError('autonomy', error, {
                     stage: 'go_loop',
                     consecutiveErrors: this.consecutiveErrors,
@@ -255,7 +248,6 @@ export class AutonomyController extends EventEmitter {
                     this.mode = 'manual';
                     this.config.autonomy.mode = 'manual';
                     this.goStopRequested = true;
-                    // @ts-expect-error TODO(ts-migration): TS(2554): Expected 0 arguments, but got 2.
                     telemetry.recordEvent('autonomy_go_guard_trip', {
                         reason: 'max_consecutive_errors',
                         consecutiveErrors: this.consecutiveErrors,

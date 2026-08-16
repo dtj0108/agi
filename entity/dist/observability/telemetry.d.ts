@@ -33,13 +33,13 @@ declare class Telemetry {
     flush(): void;
 }
 declare class NoopTelemetry {
-    recordEvent(): void;
-    recordError(): void;
-    incrementCounter(): void;
-    observeDuration(): void;
-    getRecentErrors(): never[];
-    getRecentMetrics(): never[];
-    snapshotHealth(): {
+    recordEvent(_type?: any, _data?: any): void;
+    recordError(_component?: any, _error?: any, _context?: any): void;
+    incrementCounter(_name?: any, _value?: any, _labels?: any): void;
+    observeDuration(_name?: any, _durationMs?: any, _labels?: any): void;
+    getRecentErrors(_limit?: any): never[];
+    getRecentMetrics(_windowMinutes?: any): never[];
+    snapshotHealth(_windowMinutes?: any): {
         llmSchemaFallbackRate1h: number;
         cycleFailureRate1h: number;
         errorCount1h: number;
@@ -47,7 +47,7 @@ declare class NoopTelemetry {
     };
     flush(): void;
 }
-export declare function configureTelemetry(options?: any): NoopTelemetry;
-export declare function getTelemetry(): NoopTelemetry;
+export declare function configureTelemetry(options?: any): Telemetry | NoopTelemetry;
+export declare function getTelemetry(): Telemetry | NoopTelemetry;
 export { Telemetry, NoopTelemetry };
 //# sourceMappingURL=telemetry.d.ts.map
